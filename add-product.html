@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeerZone - Add Product</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="navigation-buttons">
+            <button onclick="window.location.href='index.html'" class="nav-btn">
+                <i class="fas fa-shopping-cart"></i> Back to Shop
+            </button>
+            <button onclick="window.location.href='delete-product.html'" class="nav-btn">
+                <i class="fas fa-trash"></i> Delete Product
+            </button>
+            <button onclick="window.location.href='sales.html'" class="nav-btn">
+                <i class="fas fa-chart-line"></i> View Sales
+            </button>
+        </div>
+
+        <h1>Add New Product</h1>
+
+        <div class="add-product-form">
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="product-name">Product Name</label>
+                    <input type="text" id="product-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-price">Product Price (₹)</label>
+                    <input type="number" id="product-price" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-image">Product Image</label>
+                    <input type="file" id="product-image" accept="image/*" required>
+                </div>
+
+                <button type="submit" class="record-btn">Add Product</button>
+            </form>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <!-- Load Firebase config after Firebase is defined -->
+    <script src="firebase-config.js"></script>
+    <script>
+        // Update add-product.html script section
+        document.getElementById('product-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (!window.db) {
+                alert("Firestore is not initialized!");
+                return;
+            }
+
+            // Get form values
+            const productName = document.getElementById('product-name').value;
+            const productPrice = document.getElementById('product-price').value;
+            const productImageFile = document.getElementById('product-image').files[0];
+
+            try {
+                // Create FileReader to read the image
+                const reader = new FileReader();
+                reader.onload = async function (event) {
+                    try {
+                        // Create product object
+                        const newProduct = {
+                            name: productName,
+                            price: parseFloat(productPrice),
+                            image: event.target.result,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+
+                        // Add to Firestore
+                        await window.db.collection('products').add(newProduct);
+
+                        // Reset the form
+                        document.getElementById('product-form').reset();
+
+                        // Notify user and redirect
+                        alert('Product added successfully!');
+                        window.location.href = 'index.html';
+                    } catch (error) {
+                        console.error("Error adding product:", error);
+                        alert('Error adding product. Please try again.');
+                    }
+                };
+
+                // Read the image file
+                reader.readAsDataURL(productImageFile);
+            } catch (error) {
+                console.error("Error processing image:", error);
+                alert('Error processing image. Please try again.');
+            }
+        });
+    </script>
+</body>
+
+</html>
