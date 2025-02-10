@@ -12,7 +12,7 @@
 <body>
     <div class="container">
         <div class="navigation-buttons">
-            <button onclick="window.location.href='index.html'" class="nav-btn">
+            <button onclick="window.location.href='record.html'" class="nav-btn">
                 <i class="fas fa-shopping-cart"></i> Back to Shop
             </button>
             <button onclick="window.location.href='delete-product.html'" class="nav-btn">
@@ -20,6 +20,9 @@
             </button>
             <button onclick="window.location.href='sales.html'" class="nav-btn">
                 <i class="fas fa-chart-line"></i> View Sales
+            </button>
+            <button onclick="window.location.href='index.html'" class="nav-btn">
+                <i class="fas fa-sign-out"></i> Logout
             </button>
         </div>
 
@@ -87,7 +90,7 @@
 
                         // Notify user and redirect
                         alert('Product added successfully!');
-                        window.location.href = 'index.html';
+                        window.location.href = 'record.html';
                     } catch (error) {
                         console.error("Error adding product:", error);
                         alert('Error adding product. Please try again.');

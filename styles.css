@@ -515,6 +515,19 @@ h1 {
   font-size: 1.1em;
 }
 
-.error-message {
+/* .error-message {
   color: #d32f2f;
+} */
+
+/* Add these styles to existing styles.css */
+
+/* Login/Register link styles */
+.navigation-buttons a {
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.navigation-buttons a:hover {
+  text-decoration: underline;
+  color: #ff0000;
 }

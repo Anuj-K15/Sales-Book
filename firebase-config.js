@@ -1,4 +1,3 @@
-// firebase-config.js
 const firebaseConfig = {
     apiKey: "AIzaSyC5nk9kTE8wbeR2cubnjJ0RPaTFYoZI8p0",
     authDomain: "salesbook-223b9.firebaseapp.com",
@@ -15,6 +14,7 @@ try {
     if (typeof firebase !== "undefined") {
         firebase.initializeApp(firebaseConfig);
         window.db = firebase.firestore();
+        window.auth = firebase.auth();
         console.log("✅ Firebase initialized successfully");
         
         // Test database connection
@@ -29,3 +29,4 @@ try {
 }
 
 console.log("Firestore Initialized:", db);
+console.log("Auth Initialized:", auth);

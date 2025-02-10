@@ -23,7 +23,7 @@ async function addProduct() {
             });
 
             alert('✅ Product added successfully!');
-            window.location.href = 'index.html';
+            window.location.href = 'record.html';
         } catch (error) {
             console.error("❌ Error adding product:", error);
             alert('Error adding product. Please try again.');

@@ -1,55 +1,47 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeerZone BeerShop</title>
+    <title>Register - SalesBook</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
-
 <body>
     <div class="container">
-        <div class="navigation-buttons">
-            <button onclick="window.location.href='add-product.html'" class="nav-btn">
-                <i class="fas fa-plus"></i> Add Product
-            </button>
-            <button onclick="window.location.href='delete-product.html'" class="nav-btn">
-                <i class="fas fa-trash"></i> Delete Product
-            </button>
-            <button onclick="window.location.href='sales.html'" class="nav-btn">
-                <i class="fas fa-chart-line"></i> View Sales
-            </button>
-        </div>
-        <h1>BeerZone BeerShop</h1>
-
-        <div class="beer-list" id="beer-list">
-            <div class="loading-message">Loading products...</div>
-        </div>
-
-        <div class="cart">
-            <h3>Cart</h3>
-            <div id="cart-items"></div>
-            <div class="total-amount">
-                <strong>Total: ₹<span id="total-price">0</span></strong>
+        <h1>Register</h1>
+        <form id="registerForm" class="add-product-form">
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" required>
             </div>
-            <div class="payment-method">
-                <label for="payment">Payment Method: </label>
-                <select id="payment">
-                    <option value="upi">UPI</option>
-                    <option value="cash">Cash</option>
-                    <option value="card">Card</option>
-                </select>
+            <div class="form-group">
+                <label for="businessName">Business Name</label>
+                <input type="text" id="businessName" required>
             </div>
-            <button class="record-btn" onclick="recordSale()">Record Sale</button>
-        </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="form-group">
+                <label for="mobile">Mobile Number (10 digits)</label>
+                <input type="text" id="mobile" pattern="[0-9]{10}" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required>
+            </div>
+            <button type="submit" class="record-btn">Register</button>
+            <p style="text-align: center; margin-top: 20px;">
+                Already have an account? <a href="login.html" style="color: #4caf50; text-decoration: none;">Login here</a>
+            </p>
+        </form>
     </div>
-
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="auth.js"></script>
 </body>
 </html>
