@@ -1,67 +1,59 @@
-// script.js
+// Import Firestore database from Firebase config
+import { db } from "./firebase-config.js";
+import { 
+    collection, getDocs, addDoc, doc, updateDoc, getDoc, runTransaction 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 let cart = [];
 let orderCounter = 0;
 
-// Initialize Firebase products collection reference
-const productsRef = db.collection('products');
-
-// Initialize order counter function
-async function initializeOrderCounter() {
-    try {
-        const snapshot = await db.collection('orderCounter').doc('counter').get();
-        if (snapshot.exists) {
-            orderCounter = snapshot.data().value;
-        } else {
-            // Initialize counter document if it doesn't exist
-            await db.collection('orderCounter').doc('counter').set({ value: 0 });
-        }
-    } catch (error) {
-        console.error("Error initializing order counter:", error);
-    }
-}
-
-// Load products from Firebase
+// Load products from Firebase Firestore
 async function loadProducts() {
     const beerList = document.getElementById('beer-list');
     if (!beerList) return;
-    
+
     try {
-        const snapshot = await productsRef.get();
-        beerList.innerHTML = ''; // Clear existing products
+        const productsRef = collection(db, "products"); // ✅ Use Firestore collection
+        const snapshot = await getDocs(productsRef);
         
+        beerList.innerHTML = ''; // Clear existing products
+
         if (snapshot.empty) {
             beerList.innerHTML = '<div class="no-products">No products available</div>';
             return;
         }
-        
-        snapshot.forEach(doc => {
+
+        snapshot.forEach((doc) => {
             const product = doc.data();
             const beerCard = document.createElement('div');
             beerCard.className = 'beer-card';
             beerCard.setAttribute('data-name', product.name);
             beerCard.setAttribute('data-price', product.price);
-            
+
             beerCard.innerHTML = `
                 <img src="${product.image}" alt="${product.name}">
                 <h3>${product.name}</h3>
                 <p>₹${product.price}</p>
                 <input type="number" min="1" value="1" class="quantity">
-                <button onclick="addToCart(this)">Add to Cart</button>
+                <button onclick="addToCart('${product.name}', ${product.price})">Add to Cart</button>
             `;
-            
+
             beerList.appendChild(beerCard);
         });
     } catch (error) {
-        console.error("Error loading products:", error);
+        console.error("❌ Error loading products:", error);
         beerList.innerHTML = '<div class="error-message">Error loading products. Please refresh the page.</div>';
     }
 }
 
-function addToCart(button) {
-    const beerCard = button.closest('.beer-card');
-    const name = beerCard.getAttribute('data-name');
-    const price = parseFloat(beerCard.getAttribute('data-price'));
-    const quantity = parseInt(beerCard.querySelector('.quantity').value);
+// Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadProducts();
+});
+
+// Function to add products to the cart
+window.addToCart = function(name, price) {
+    const quantity = 1; // Default quantity
 
     const item = {
         name: name,
@@ -72,16 +64,17 @@ function addToCart(button) {
 
     cart.push(item);
     updateCart();
-}
+};
 
+// Function to update the cart UI
 function updateCart() {
     const cartItemsDiv = document.getElementById('cart-items');
     const totalPriceSpan = document.getElementById('total-price');
-    
-    cartItemsDiv.innerHTML = '';
 
+    cartItemsDiv.innerHTML = '';
     let total = 0;
-    cart.forEach(item => {
+
+    cart.forEach((item) => {
         const itemDiv = document.createElement('div');
         itemDiv.classList.add('cart-item');
         itemDiv.innerHTML = `${item.name} x ${item.quantity} - ₹${item.totalPrice}`;
@@ -92,8 +85,9 @@ function updateCart() {
     totalPriceSpan.textContent = total.toFixed(2);
 }
 
+// Function to record a sale
 async function recordSale() {
-    if (!window.db) {
+    if (!db) {
         alert("Firestore (db) is not initialized. Please refresh the page.");
         return;
     }
@@ -104,11 +98,11 @@ async function recordSale() {
     }
 
     try {
-        const counterRef = window.db.collection('orderCounter').doc('counter');
+        const counterRef = doc(db, 'orderCounter', 'counter');
 
-        await window.db.runTransaction(async (transaction) => {
-            const doc = await transaction.get(counterRef);
-            const newCounter = (doc.exists ? doc.data().value : 0) + 1;
+        await runTransaction(db, async (transaction) => {
+            const docSnap = await transaction.get(counterRef);
+            const newCounter = (docSnap.exists() ? docSnap.data().value : 0) + 1;
             transaction.update(counterRef, { value: newCounter });
             orderCounter = newCounter;
         });
@@ -117,12 +111,12 @@ async function recordSale() {
         const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
         const now = new Date();
 
-        await window.db.collection('sales').add({
+        await addDoc(collection(db, 'sales'), {
             orderNo: `#${String(orderCounter).padStart(3, '0')}`,
             items: cart,
             paymentMethod: paymentMethod,
             totalAmount: totalAmount,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            timestamp: new Date(),
             date: now.toLocaleDateString(),
             time: now.toLocaleTimeString()
         });
@@ -136,16 +130,5 @@ async function recordSale() {
     }
 }
 
-// Initialize everything when the page loads
-document.addEventListener('DOMContentLoaded', async () => {
-    if (window.db) {
-        await initializeOrderCounter();
-        await loadProducts();
-    } else {
-        console.error("Firebase is not initialized!");
-        const beerList = document.getElementById('beer-list');
-        if (beerList) {
-            beerList.innerHTML = '<div class="error-message">Error: Database not connected. Please refresh the page.</div>';
-        }
-    }
-});
+// Make `recordSale` function globally available
+window.recordSale = recordSale;

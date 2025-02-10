@@ -1,0 +1,134 @@
+/* General styles for the website */
+body {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f9d423, #ff4e50);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Container styles */
+.container {
+  max-width: 100%;
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 5px solid #222;
+  border-radius: 15px;
+  box-shadow: 10px 10px 0px #222;
+  width: 95%;
+  margin-bottom: 40px;
+}
+
+/* Heading styles */
+h1 {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(90deg, #ff6b6b, #e63946);
+  padding: 1rem 2rem;
+  border: 4px solid #000;
+  border-radius: 15px;
+  box-shadow: 6px 6px 0 #000;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Form Styles */
+.add-product-form {
+  background: white;
+  border: 4px solid black;
+  border-radius: 15px;
+  box-shadow: 6px 6px 0px black;
+  padding: 25px;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.form-group input[type="email"],
+.form-group input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  border: 4px solid #000;
+  border-radius: 8px;
+  font-size: 18px;
+  box-shadow: 5px 5px 0px #000;
+}
+
+.form-group input:focus {
+  outline: none;
+  box-shadow: 5px 5px 0px #e0b000;
+  border-color: #e0b000;
+}
+
+/* Login Button */
+.record-btn {
+  background: #28a745;
+  color: white;
+  padding: 20px 40px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 6px 6px 0px black;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.record-btn:hover {
+  background: #218838;
+  transform: translateY(-5px);
+  box-shadow: 8px 8px 0px black;
+}
+
+.record-btn:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0px black;
+}
+
+/* Register Link Styles */
+a {
+  color: #4caf50;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #45a049;
+  text-decoration: underline;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+    padding: 1rem;
+  }
+
+  .form-group input[type="email"],
+  .form-group input[type="password"] {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .record-btn {
+    font-size: 16px;
+    padding: 15px 30px;
+  }
+}
