@@ -1,34 +1,29 @@
-// Import Firestore database from Firebase config
+// Import Firestore database
 import { db } from "./firebase-config.js";
-import { 
-    collection, getDocs, addDoc, doc, updateDoc, getDoc, runTransaction 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let cart = [];
-let orderCounter = 0;
-
-// Load products from Firebase Firestore
+// ✅ Function to Load Products
 async function loadProducts() {
-    const beerList = document.getElementById('beer-list');
+    const beerList = document.getElementById("beer-list");
     if (!beerList) return;
 
     try {
-        const productsRef = collection(db, "products"); // ✅ Use Firestore collection
+        const productsRef = collection(db, "products"); // ✅ Firestore Collection Reference
         const snapshot = await getDocs(productsRef);
-        
-        beerList.innerHTML = ''; // Clear existing products
+
+        beerList.innerHTML = ""; // Clear existing products
 
         if (snapshot.empty) {
-            beerList.innerHTML = '<div class="no-products">No products available</div>';
+            beerList.innerHTML = "<div class='no-products'>No products available</div>";
             return;
         }
 
         snapshot.forEach((doc) => {
             const product = doc.data();
-            const beerCard = document.createElement('div');
-            beerCard.className = 'beer-card';
-            beerCard.setAttribute('data-name', product.name);
-            beerCard.setAttribute('data-price', product.price);
+            const beerCard = document.createElement("div");
+            beerCard.className = "beer-card";
+            beerCard.setAttribute("data-name", product.name);
+            beerCard.setAttribute("data-price", product.price);
 
             beerCard.innerHTML = `
                 <img src="${product.image}" alt="${product.name}">
@@ -42,14 +37,13 @@ async function loadProducts() {
         });
     } catch (error) {
         console.error("❌ Error loading products:", error);
-        beerList.innerHTML = '<div class="error-message">Error loading products. Please refresh the page.</div>';
+        beerList.innerHTML = "<div class='error-message'>Error loading products. Please refresh the page.</div>";
     }
 }
 
-// Initialize everything when the page loads
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadProducts();
-});
+// ✅ Load Products on Page Load
+document.addEventListener("DOMContentLoaded", loadProducts);
+
 
 // Function to add products to the cart
 window.addToCart = function(name, price) {

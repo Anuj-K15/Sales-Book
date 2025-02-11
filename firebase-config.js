@@ -1,9 +1,9 @@
-// Import Firebase modules
+// Import the latest Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase configuration
+// ✅ Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyC5nk9kTE8wbeR2cubnjJ0RPaTFYoZI8p0",
     authDomain: "salesbook-223b9.firebaseapp.com",
@@ -15,11 +15,12 @@ const firebaseConfig = {
     measurementId: "G-Q87LNQRXKL"
 };
 
-// Initialize Firebase
+// ✅ Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Export Firebase instances
+// ✅ Export `auth` and `db` so they can be used in `auth.js` and `script.js`
 export { auth, db };
+
 console.log("✅ Firebase initialized successfully.");

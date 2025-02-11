@@ -1,19 +1,19 @@
-// Import Firebase modules
+// Import Firebase authentication
 import { auth, db } from "./firebase-config.js";
-import {
+import { 
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     onAuthStateChanged,
-    signOut
+    signOut 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-    doc,
-    setDoc,
+import { 
+    doc, 
+    setDoc, 
     getDoc,
-    serverTimestamp
+    serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Handle Login
+// ✅ Handle Login
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
@@ -33,7 +33,7 @@ if (loginForm) {
     });
 }
 
-// Handle Registration
+// ✅ Handle Registration
 const registerForm = document.getElementById("registerForm");
 if (registerForm) {
     registerForm.addEventListener("submit", async (e) => {
@@ -46,7 +46,6 @@ if (registerForm) {
         const password = document.getElementById("password").value;
         const confirmPassword = document.getElementById("confirmPassword").value;
 
-        // Validation
         if (password !== confirmPassword) {
             alert("Passwords don't match!");
             return;
@@ -58,10 +57,9 @@ if (registerForm) {
         }
 
         try {
-            // Create user in Firebase Auth
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-            // Store additional user data in Firestore
+            // ✅ Store additional user data in Firestore
             const userDocRef = doc(db, "users", userCredential.user.uid);
             await setDoc(userDocRef, {
                 fullName,
@@ -80,65 +78,46 @@ if (registerForm) {
     });
 }
 
+// ✅ Firebase Auth State Observer
 onAuthStateChanged(auth, async (user) => {
-    console.log("🔄 Checking auth state...");
+    if (user) {
+        console.log("✅ User is signed in:", user);
 
-    if (!user) {
-        console.log("❌ User is signed out");
+        // ✅ Fetch Business Name from Firestore
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
 
-        // ✅ Ensure the user stays on the register page after logout
-        if (window.location.pathname !== "/index.html") {
-            window.location.href = "index.html";
+        if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            console.log("🏢 Business Name:", userData.businessName);
+
+            // ✅ Update Business Name in record.html
+            const heading = document.getElementById("businessNameHeading");
+            if (heading) {
+                heading.textContent = userData.businessName;
+            }
         }
-        return; // ✅ Stop execution here
-    }
-
-    // ✅ If the user is logged in, proceed with normal redirection
-    console.log("✅ User is signed in:", user);
-
-    const userDocRef = doc(db, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
-
-    if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        const businessName = userData.businessName;
-
-        // ✅ Update Business Name in record.html
-        const heading = document.getElementById("businessNameHeading");
-        if (heading) {
-            heading.textContent = businessName;
-        }
-    } else {
-        console.log("❌ User document not found in Firestore.");
-    }
-
-    // ✅ Only redirect if necessary
-    if (window.location.pathname.includes("index.html")) {
-        window.location.href = "login.html";
-    } else if (window.location.pathname.includes("login.html")) {
-        window.location.href = "record.html";
     }
 });
-
 
 export async function handleSignOut() {
     try {
         await signOut(auth);
         console.log("✅ Signed out successfully");
 
-        // ✅ Clear all stored authentication data
+        // ✅ Clear storage to remove session data
         localStorage.clear();
         sessionStorage.clear();
 
-        // ✅ Delay before redirecting to ensure session is cleared
+        // ✅ Delay redirection to ensure logout is fully processed
         setTimeout(() => {
-            window.location.replace("index.html"); // Hard redirect prevents back navigation
-        }, 500); // Short delay to ensure logout completes
+            window.location.replace("index.html");
+        }, 500); // 500ms delay prevents race conditions
     } catch (error) {
         console.error("❌ Sign out error:", error);
         alert(error.message);
     }
 }
 
-// ✅ Make signOut function available globally
+// ✅ Make signOut function globally available
 window.handleSignOut = handleSignOut;
