@@ -187,3 +187,33 @@ h1 {
       padding: 1rem;
   }
 }
+
+/* 🔹 Responsive Navigation Buttons */
+.navigation-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.nav-btn {
+  flex: 1 1 auto;
+  padding: 12px;
+  font-size: 16px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .nav-btn {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-btn {
+    width: 100%;
+    font-size: 14px;
+    padding: 10px;
+  }
+}
