@@ -1,18 +1,34 @@
-// Import Firestore database
-import { db } from "./firebase-config.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+// ✅ Define cart at the beginning to avoid "cart is not defined" error
+let cart = [];
+let orderCounter = 0;
 
+// ✅ Import Firestore database
+import { db } from "./firebase-config.js";
+import { loadSales } from "./sales-page.js"; // ✅ Import loadSales
+import { collection, getDocs, addDoc, doc, runTransaction, query, orderBy } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ✅ Dynamically import `loadSales` if on sales.html
+if (window.location.pathname.includes("sales.html")) {
+    import("./sales-page.js")
+        .then((module) => {
+            module.loadSales(); // ✅ Call loadSales after importing
+        })
+        .catch((error) => {
+            console.error("❌ Error loading sales-page.js:", error);
+        });
+}
 // ✅ Function to Load Products
+// ✅ Function to load products
 async function loadProducts() {
     const beerList = document.getElementById("beer-list");
     if (!beerList) return;
 
     try {
-        const productsRef = collection(db, "products"); // ✅ Firestore Collection Reference
+        const productsRef = collection(db, "products");
         const snapshot = await getDocs(productsRef);
 
-        beerList.innerHTML = ""; // Clear existing products
-
+        beerList.innerHTML = "";
         if (snapshot.empty) {
             beerList.innerHTML = "<div class='no-products'>No products available</div>";
             return;
@@ -30,7 +46,7 @@ async function loadProducts() {
                 <h3>${product.name}</h3>
                 <p>₹${product.price}</p>
                 <input type="number" min="1" value="1" class="quantity">
-                <button onclick="addToCart('${product.name}', ${product.price})">Add to Cart</button>
+                <button onclick="addToCart('${product.name}', ${product.price}, this)">Add to Cart</button>
             `;
 
             beerList.appendChild(beerCard);
@@ -43,11 +59,16 @@ async function loadProducts() {
 
 // ✅ Load Products on Page Load
 document.addEventListener("DOMContentLoaded", loadProducts);
+// ✅ Function to add products to the cart
+window.addToCart = function (name, price, buttonElement) {
+    const beerCard = buttonElement.closest(".beer-card"); // ✅ Get parent card
+    const quantityInput = beerCard.querySelector(".quantity"); // ✅ Find the input field
+    const quantity = parseInt(quantityInput.value); // ✅ Get selected quantity
 
-
-// Function to add products to the cart
-window.addToCart = function(name, price) {
-    const quantity = 1; // Default quantity
+    if (isNaN(quantity) || quantity <= 0) {
+        alert("❌ Please enter a valid quantity!");
+        return;
+    }
 
     const item = {
         name: name,
@@ -60,18 +81,28 @@ window.addToCart = function(name, price) {
     updateCart();
 };
 
-// Function to update the cart UI
-function updateCart() {
-    const cartItemsDiv = document.getElementById('cart-items');
-    const totalPriceSpan = document.getElementById('total-price');
 
-    cartItemsDiv.innerHTML = '';
+// ✅ Function to update the cart UI
+// ✅ Function to update the cart UI
+// ✅ Function to update the cart UI
+function updateCart() {
+    const cartItemsDiv = document.getElementById("cart-items");
+    const totalPriceSpan = document.getElementById("total-price");
+
+    cartItemsDiv.innerHTML = "";
     let total = 0;
 
-    cart.forEach((item) => {
-        const itemDiv = document.createElement('div');
-        itemDiv.classList.add('cart-item');
-        itemDiv.innerHTML = `${item.name} x ${item.quantity} - ₹${item.totalPrice}`;
+    cart.forEach((item, index) => {
+        const itemDiv = document.createElement("div");
+        itemDiv.classList.add("cart-item");
+
+        itemDiv.innerHTML = `
+            <span>${item.name} x ${item.quantity} - ₹${item.totalPrice}</span>
+            <button class="remove-btn" onclick="removeFromCart(${index})">
+                <i class="fa-solid fa-circle-minus"></i>
+            </button>
+        `;
+
         cartItemsDiv.appendChild(itemDiv);
         total += item.totalPrice;
     });
@@ -79,7 +110,15 @@ function updateCart() {
     totalPriceSpan.textContent = total.toFixed(2);
 }
 
-// Function to record a sale
+// ✅ Function to remove an item from the cart
+window.removeFromCart = function (index) {
+    cart.splice(index, 1); // ✅ Remove item at given index
+    updateCart(); // ✅ Refresh cart UI
+};
+
+
+
+// ✅ Function to record a sale
 async function recordSale() {
     if (!db) {
         alert("Firestore (db) is not initialized. Please refresh the page.");
@@ -87,42 +126,52 @@ async function recordSale() {
     }
 
     if (cart.length === 0) {
-        alert('Cart is empty!');
+        alert("Cart is empty!");
         return;
     }
 
     try {
-        const counterRef = doc(db, 'orderCounter', 'counter');
+        const salesRef = collection(db, "sales");
+        const salesQuery = query(salesRef, orderBy("timestamp", "desc"));
+        const snapshot = await getDocs(salesQuery);
 
-        await runTransaction(db, async (transaction) => {
-            const docSnap = await transaction.get(counterRef);
-            const newCounter = (docSnap.exists() ? docSnap.data().value : 0) + 1;
-            transaction.update(counterRef, { value: newCounter });
-            orderCounter = newCounter;
-        });
+        let nextOrderNumber = 1; // ✅ Default first order of the day
+        const today = new Date().toLocaleDateString(); // ✅ Get today's date
 
-        const paymentMethod = document.getElementById('payment').value;
+        // ✅ Check last recorded sale to see if it's from today
+        if (!snapshot.empty) {
+            const lastSale = snapshot.docs[0].data();
+            if (lastSale.date === today) {
+                // ✅ If sales exist for today, increment the last order number
+                const lastOrderNum = parseInt(lastSale.orderNo.replace("#", ""), 10);
+                nextOrderNumber = lastOrderNum + 1;
+            }
+        }
+
+        const paymentMethod = document.getElementById("payment").value;
         const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
         const now = new Date();
 
-        await addDoc(collection(db, 'sales'), {
-            orderNo: `#${String(orderCounter).padStart(3, '0')}`,
+        await addDoc(salesRef, {
+            orderNo: `#${String(nextOrderNumber).padStart(3, "0")}`,
             items: cart,
             paymentMethod: paymentMethod,
             totalAmount: totalAmount,
-            timestamp: new Date(),
-            date: now.toLocaleDateString(),
-            time: now.toLocaleTimeString()
+            timestamp: now,
+            date: today,
+            time: now.toLocaleTimeString(),
         });
 
-        alert('✅ Sale Recorded Successfully!');
+        alert(`✅ Sale Recorded Successfully as Order #${nextOrderNumber}`);
         cart = [];
         updateCart();
+        loadSales(); // ✅ Reload sales table
+
     } catch (error) {
         console.error("❌ Error recording sale:", error);
-        alert('Error recording sale. Please try again.');
+        alert("Error recording sale. Please try again.");
     }
 }
 
-// Make `recordSale` function globally available
+// ✅ Make `recordSale` function globally available
 window.recordSale = recordSale;

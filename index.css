@@ -8,18 +8,18 @@ body {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  justify-content: center;
 }
 
 /* Container styles */
 .container {
-  max-width: 100%;
+  width: 93%;
+  height: 95%;
   padding: 25px;
   background: rgba(255, 255, 255, 0.9);
   border: 5px solid #222;
   border-radius: 15px;
   box-shadow: 10px 10px 0px #222;
-  width: 95%;
-  margin-bottom: 40px;
 }
 
 /* Heading styles */
@@ -60,7 +60,7 @@ h1 {
 .form-group input[type="text"],
 .form-group input[type="email"],
 .form-group input[type="password"] {
-  width: 100%;
+  width: 98%;
   padding: 10px;
   border: 4px solid #000;
   border-radius: 8px;

@@ -1,32 +1,87 @@
-// add-product.js
-async function addProduct() {
-    const productName = document.getElementById('product-name').value;
-    const productPrice = parseFloat(document.getElementById('product-price').value);
-    const productImage = document.getElementById('product-image').files[0];
+// ✅ Import Firestore properly
+import { db } from "./firebase-config.js";
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    if (!productName || isNaN(productPrice) || !productImage) {
-        alert('❌ Please enter all details correctly.');
+// ✅ Ensure Firebase is initialized
+if (!db) {
+    console.error("❌ Firestore is not initialized at the start!");
+} else {
+    console.log("✅ Firestore is initialized in add-product.js");
+}
+
+// ✅ Function to Handle Image Compression
+async function compressImage(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                let width = img.width;
+                let height = img.height;
+
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+
+                resolve(canvas.toDataURL("image/jpeg", 0.7));
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ✅ Function to Add Product to Firestore
+async function addProduct(e) {
+    e.preventDefault();
+
+    const productName = document.getElementById("product-name").value;
+    const productPrice = parseFloat(document.getElementById("product-price").value);
+    const productImageFile = document.getElementById("product-image").files[0];
+
+    if (!productName || isNaN(productPrice) || !productImageFile) {
+        alert("❌ Please enter all details correctly.");
         return;
     }
 
-    const reader = new FileReader();
-    reader.readAsDataURL(productImage);
-    reader.onloadend = async function () {
-        const base64Image = reader.result;
+    try {
+        const compressedImage = await compressImage(productImageFile);
+
         console.log("📤 Uploading Product:", { name: productName, price: productPrice });
 
-        try {
-            await db.collection('products').add({
-                name: productName,
-                price: productPrice,
-                image: base64Image
-            });
+        await addDoc(collection(db, "products"), {
+            name: productName,
+            price: productPrice,
+            image: compressedImage,
+            timestamp: serverTimestamp(),
+        });
 
-            alert('✅ Product added successfully!');
-            window.location.href = 'record.html';
-        } catch (error) {
-            console.error("❌ Error adding product:", error);
-            alert('Error adding product. Please try again.');
-        }
-    };
+        alert("✅ Product added successfully!");
+        document.getElementById("product-form").reset();
+        window.location.href = "record.html";
+    } catch (error) {
+        console.error("❌ Error adding product:", error);
+        alert("Error adding product. Please try again.");
+    }
 }
+
+// ✅ Attach Event Listener on Form Submission
+document.getElementById("product-form").addEventListener("submit", addProduct);
