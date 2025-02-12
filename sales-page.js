@@ -49,6 +49,9 @@ export async function loadSales() {
 
         let todayTotal = 0;
         let monthTotal = 0;
+        let lastDate = null;
+        let dailyTotal = 0;
+        let dateRow = null;
         const today = new Date().toISOString().split("T")[0];
         const currentMonth = new Date().getMonth();
 
@@ -59,25 +62,61 @@ export async function loadSales() {
             return;
         }
 
-        snapshot.forEach((docSnap) => {
+        snapshot.forEach((docSnap, index) => {
             const sale = docSnap.data();
-            const saleDate = sale.timestamp?.toDate();
-            const formattedDate = sale.date;
+            const saleDate = sale.date;
             const formattedTime = sale.time;
 
-            if (formattedDate === today) todayTotal += sale.totalAmount;
-            if (saleDate && saleDate.getMonth() === currentMonth) monthTotal += sale.totalAmount;
+            if (saleDate === today) todayTotal += sale.totalAmount;
+            if (new Date(saleDate).getMonth() === currentMonth) monthTotal += sale.totalAmount;
 
+            // ✅ Insert Date Separator with Total Sales
+            if (saleDate !== lastDate) {
+                if (dateRow !== null) {
+                    // ✅ Update the last date row with total sales before inserting the next date
+                    dateRow.innerHTML = `
+                        <td colspan="6" style="text-align:center; font-weight:bold; background:#f3545a; color:white; padding:10px; border-top: 2px solid black;">
+                            📅 ${lastDate} - Total Sale: ₹${dailyTotal.toFixed(2)}
+                        </td>
+                    `;
+                }
+
+                // ✅ Reset daily total and create a new date separator row
+                dailyTotal = 0;
+                dateRow = document.createElement("tr");
+                dateRow.className = "date-separator";
+                dateRow.innerHTML = `
+                    <td colspan="6" style="text-align:center; font-weight:bold; background:#f3545a; color:white; padding:10px; border-top: 2px solid black;">
+                        📅 ${saleDate} - Total Sale: Calculating...
+                    </td>
+                `;
+                tableBody.appendChild(dateRow);
+                lastDate = saleDate;
+            }
+
+            // ✅ Accumulate daily total
+            dailyTotal += sale.totalAmount;
+
+            // ✅ Insert Sale Data
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${sale.orderNo}</td>
                 <td>${sale.items.map(item => `${item.name} x${item.quantity}`).join("<br>")}</td>
                 <td>₹${sale.totalAmount.toFixed(2)}</td>
-                <td>${sale.date}<br>${sale.time}</td>
+                <td>${saleDate} ${formattedTime}</td>
                 <td>${sale.paymentMethod}</td>
                 <td><button class="delete-btn" data-id="${docSnap.id}">Delete</button></td>
             `;
             tableBody.appendChild(tr);
+
+            // ✅ Update the last date row total when at the last entry
+            if (index === snapshot.docs.length - 1 && dateRow !== null) {
+                dateRow.innerHTML = `
+                    <td colspan="6" style="text-align:center; font-weight:bold; background:#f3545a; color:white; padding:10px; border-top: 2px solid black;">
+                        📅 ${lastDate} - Total Sale: ₹${dailyTotal.toFixed(2)}
+                    </td>
+                `;
+            }
         });
 
         todayTotalElement.textContent = `₹${todayTotal.toFixed(2)}`;
