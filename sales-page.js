@@ -49,7 +49,7 @@ export async function loadSales() {
 
         let todayTotal = 0;
         let monthTotal = 0;
-        const today = new Date().toLocaleDateString();
+        const today = new Date().toISOString().split("T")[0];
         const currentMonth = new Date().getMonth();
 
         tableBody.innerHTML = "";
@@ -62,8 +62,10 @@ export async function loadSales() {
         snapshot.forEach((docSnap) => {
             const sale = docSnap.data();
             const saleDate = sale.timestamp?.toDate();
+            const formattedDate = sale.date;
+            const formattedTime = sale.time;
 
-            if (sale.date === today) todayTotal += sale.totalAmount;
+            if (formattedDate === today) todayTotal += sale.totalAmount;
             if (saleDate && saleDate.getMonth() === currentMonth) monthTotal += sale.totalAmount;
 
             const tr = document.createElement("tr");
