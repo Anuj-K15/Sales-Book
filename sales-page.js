@@ -22,8 +22,27 @@ function elementsExist() {
         document.querySelector(".summary-card:last-child p");
 }
 
+// ✅ Function to get today's date in IST
+function getTodayIST() {
+    const now = new Date();
+    const istOptions = { 
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    };
+    
+    const [day, month, year] = now.toLocaleString('en-GB', istOptions).split('/');
+    return `${year}-${month}-${day}`; // YYYY-MM-DD format
+}
+
+// ✅ Function to get current month in IST
+function getCurrentMonthIST() {
+    return new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kolkata', month: 'numeric' }) - 1;
+}
+
+
 // ✅ Function to load sales
-// ✅ Ensure `loadSales` is exported correctly
 export async function loadSales() {
     console.log("🔄 Loading sales...");
 
@@ -50,10 +69,8 @@ export async function loadSales() {
         let todayTotal = 0;
         let monthTotal = 0;
         let lastDate = null;
-        let dailyTotal = 0;
-        let dateRow = null;
-        const today = new Date().toISOString().split("T")[0];
-        const currentMonth = new Date().getMonth();
+        const today = getTodayIST();
+        const currentMonth = getCurrentMonthIST();
 
         tableBody.innerHTML = "";
 
@@ -62,40 +79,38 @@ export async function loadSales() {
             return;
         }
 
-        snapshot.forEach((docSnap, index) => {
+        // ✅ First pass: Calculate daily totals
+        const dailyTotals = {};
+        snapshot.forEach((docSnap) => {
+            const sale = docSnap.data();
+            const saleDate = sale.date;
+            
+            if (!dailyTotals[saleDate]) {
+                dailyTotals[saleDate] = 0;
+            }
+            dailyTotals[saleDate] += sale.totalAmount;
+
+            if (saleDate === today) todayTotal += sale.totalAmount;
+            if (new Date(saleDate).getMonth() === currentMonth) monthTotal += sale.totalAmount;
+        });
+        // ✅ Second pass: Create table rows with pre-calculated totals
+        snapshot.forEach((docSnap) => {
             const sale = docSnap.data();
             const saleDate = sale.date;
             const formattedTime = sale.time;
 
-            if (saleDate === today) todayTotal += sale.totalAmount;
-            if (new Date(saleDate).getMonth() === currentMonth) monthTotal += sale.totalAmount;
-
-            // ✅ Insert Date Separator with Total Sales
+            // ✅ Insert Date Separator with Pre-calculated Total
             if (saleDate !== lastDate) {
-                if (dateRow !== null) {
-                    // ✅ Update the last date row with total sales before inserting the next date
-                    dateRow.innerHTML = `
-                        <td colspan="6" style="text-align:center; font-weight:bold; background:#f3545a; color:white; padding:10px; border-top: 2px solid black;">
-                            📅 ${lastDate} - Total Sale: ₹${dailyTotal.toFixed(2)}
-                        </td>
-                    `;
-                }
-
-                // ✅ Reset daily total and create a new date separator row
-                dailyTotal = 0;
-                dateRow = document.createElement("tr");
+                const dateRow = document.createElement("tr");
                 dateRow.className = "date-separator";
                 dateRow.innerHTML = `
                     <td colspan="6" style="text-align:center; font-weight:bold; background:#f3545a; color:white; padding:10px; border-top: 2px solid black;">
-                        📅 ${saleDate} - Total Sale: Calculating...
+                        📅 ${saleDate} - Total Sale: ₹${dailyTotals[saleDate].toFixed(2)}
                     </td>
                 `;
                 tableBody.appendChild(dateRow);
                 lastDate = saleDate;
             }
-
-            // ✅ Accumulate daily total
-            dailyTotal += sale.totalAmount;
 
             // ✅ Insert Sale Data
             const tr = document.createElement("tr");
@@ -108,15 +123,6 @@ export async function loadSales() {
                 <td><button class="delete-btn" data-id="${docSnap.id}">Delete</button></td>
             `;
             tableBody.appendChild(tr);
-
-            // ✅ Update the last date row total when at the last entry
-            if (index === snapshot.docs.length - 1 && dateRow !== null) {
-                dateRow.innerHTML = `
-                    <td colspan="6" style="text-align:center; font-weight:bold; background:#f3545a; color:white; padding:10px; border-top: 2px solid black;">
-                        📅 ${lastDate} - Total Sale: ₹${dailyTotal.toFixed(2)}
-                    </td>
-                `;
-            }
         });
 
         todayTotalElement.textContent = `₹${todayTotal.toFixed(2)}`;
@@ -131,6 +137,8 @@ export async function loadSales() {
         console.error("❌ Error loading sales:", error);
     }
 }
+
+// Rest of the code remains unchanged...
 
 // ✅ Function to wait for elements in the DOM
 function waitForElements(callback) {

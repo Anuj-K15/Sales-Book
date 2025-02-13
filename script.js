@@ -118,17 +118,31 @@ window.removeFromCart = function (index) {
     updateCart(); // ✅ Refresh cart UI
 };
 
-// ✅ Function to format date and time consistently (YYYY-MM-DD HH:MM:SS)
+// ✅ Function to get current date and time in IST
 function getFormattedDateTime() {
+    // Create date object in IST timezone
     const now = new Date();
-    const options = { 
-        year: "numeric", month: "2-digit", day: "2-digit", 
-        hour: "2-digit", minute: "2-digit", second: "2-digit", 
-        hour12: false, timeZone: "Asia/Kolkata" // ✅ Ensures IST timezone
+    const istOptions = { 
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
     };
     
-    return now.toLocaleString("en-GB", options).replace(",", ""); // Remove comma between date & time
+    const istDateTime = now.toLocaleString('en-GB', istOptions);
+    const [date, time] = istDateTime.split(', ');
+    const [day, month, year] = date.split('/');
+    
+    return {
+        date: `${year}-${month}-${day}`, // YYYY-MM-DD format
+        time: time // HH:MM:SS format
+    };
 }
+
 
 // ✅ Function to record a sale
 async function recordSale() {
@@ -148,19 +162,22 @@ async function recordSale() {
         const snapshot = await getDocs(salesQuery);
 
         let nextOrderNumber = 1;
-        const today = new Date().toISOString().split("T")[0]; // ✅ Standardized date (YYYY-MM-DD)
+        const { date, time } = getFormattedDateTime(); // Get current IST date and time
 
         if (!snapshot.empty) {
             const lastSale = snapshot.docs[0].data();
-            if (lastSale.date === today) {
+            // Only increment the order number if it's the same date
+            if (lastSale.date === date) {
                 const lastOrderNum = parseInt(lastSale.orderNo.replace("#", ""), 10);
                 nextOrderNumber = lastOrderNum + 1;
+            } else {
+                // If it's a new date, start from 1
+                nextOrderNumber = 1;
             }
         }
 
         const paymentMethod = document.getElementById("payment").value;
         const totalAmount = cart.reduce((sum, item) => sum + item.totalPrice, 0);
-        const formattedDateTime = getFormattedDateTime(); // ✅ Use standardized format
 
         await addDoc(salesRef, {
             orderNo: `#${String(nextOrderNumber).padStart(3, "0")}`,
@@ -168,8 +185,8 @@ async function recordSale() {
             paymentMethod: paymentMethod,
             totalAmount: totalAmount,
             timestamp: new Date(),
-            date: today, // ✅ YYYY-MM-DD format
-            time: formattedDateTime.split(" ")[1], // ✅ HH:MM:SS format
+            date: date,
+            time: time
         });
 
         alert(`✅ Sale Recorded Successfully as Order #${nextOrderNumber}`);
