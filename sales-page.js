@@ -153,6 +153,49 @@ function waitForElements(callback) {
     observer.observe(document.body, { childList: true, subtree: true });
 }
 
+// ✅ Function to renumber sales after deletion
+async function renumberSales() {
+    try {
+        const salesRef = collection(db, "sales");
+        const salesQuery = query(salesRef, orderBy("timestamp", "asc")); // Fetch sales in order
+        const snapshot = await getDocs(salesQuery);
+
+        // Group sales by date
+        const salesByDate = {};
+        snapshot.docs.forEach(docSnap => {
+            const sale = docSnap.data();
+            if (!salesByDate[sale.date]) {
+                salesByDate[sale.date] = [];
+            }
+            salesByDate[sale.date].push({
+                id: docSnap.id,
+                ...sale
+            });
+        });
+
+        const batchUpdates = [];
+
+        // Renumber each date's sales separately
+        for (const date in salesByDate) {
+            let orderNumber = 1;
+            for (const sale of salesByDate[date]) {
+                const newOrderNo = `#${String(orderNumber).padStart(3, "0")}`;
+                if (sale.orderNo !== newOrderNo) {
+                    const saleRef = doc(db, "sales", sale.id);
+                    batchUpdates.push(updateDoc(saleRef, { orderNo: newOrderNo }));
+                }
+                orderNumber++;
+            }
+        }
+
+        // Apply updates in parallel
+        await Promise.all(batchUpdates);
+        console.log("✅ Sales renumbered successfully!");
+
+    } catch (error) {
+        console.error("❌ Error renumbering sales:", error);
+    }
+}
 
 // ✅ Function to delete a sale and renumber the remaining ones
 async function deleteSale(saleId) {
@@ -180,33 +223,6 @@ async function deleteSale(saleId) {
     }
 }
 
-// ✅ Function to renumber sales after deletion
-async function renumberSales() {
-    try {
-        const salesRef = collection(db, "sales");
-        const salesQuery = query(salesRef, orderBy("timestamp", "asc")); // Fetch sales in order
-        const snapshot = await getDocs(salesQuery);
-
-        let newOrderNumber = 1; // Start renumbering from #1
-        const batchUpdates = [];
-
-        for (const docSnap of snapshot.docs) {
-            const saleRef = doc(db, "sales", docSnap.id);
-            const newOrderNo = `#${String(newOrderNumber).padStart(3, "0")}`;
-            
-            // ✅ Only update if the number is different
-            if (docSnap.data().orderNo !== newOrderNo) {
-                batchUpdates.push(updateDoc(saleRef, { orderNo: newOrderNo }));
-            }
-
-            newOrderNumber++;
-        }
-
-        // ✅ Apply updates in parallel
-        await Promise.all(batchUpdates);
-        console.log("✅ Sales renumbered successfully!");
-
-    } catch (error) {
-        console.error("❌ Error renumbering sales:", error);
-    }
-}
+// Make functions globally available
+window.deleteSale = deleteSale;
+window.renumberSales = renumberSales;

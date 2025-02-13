@@ -190,10 +190,10 @@ h1 {
 
 /* 🔹 Responsive Navigation Buttons */
 .navigation-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
 .nav-btn {

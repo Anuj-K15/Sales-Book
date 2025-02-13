@@ -40,8 +40,9 @@ h1 {
 
 /* Navigation Buttons */
 .navigation-buttons {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
   margin-bottom: 20px;
 }
 
