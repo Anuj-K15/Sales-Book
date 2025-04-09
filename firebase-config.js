@@ -1,6 +1,5 @@
 // Import the latest Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ✅ Firebase configuration
@@ -17,10 +16,9 @@ const firebaseConfig = {
 
 // ✅ Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ✅ Export `auth` and `db` so they can be used in `auth.js` and `script.js`
-export { auth, db };
+// ✅ Export only db since we removed authentication
+export { db };
 
 console.log("✅ Firebase initialized successfully.");

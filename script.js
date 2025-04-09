@@ -5,8 +5,8 @@ let orderCounter = 0;
 // ✅ Import Firestore database
 import { db } from "./firebase-config.js";
 import { loadSales } from "./sales-page.js"; // ✅ Import loadSales
-import { collection, getDocs, addDoc, doc, runTransaction, query, orderBy } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, addDoc, doc, runTransaction, query, orderBy }
+    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ✅ Dynamically import `loadSales` if on sales.html
 if (window.location.pathname.includes("sales.html")) {
@@ -18,7 +18,6 @@ if (window.location.pathname.includes("sales.html")) {
             console.error("❌ Error loading sales-page.js:", error);
         });
 }
-
 
 // ✅ Function to Load Products
 // ✅ Function to load products
@@ -61,6 +60,7 @@ async function loadProducts() {
 
 // ✅ Load Products on Page Load
 document.addEventListener("DOMContentLoaded", loadProducts);
+
 // ✅ Function to add products to the cart
 window.addToCart = function (name, price, buttonElement) {
     const beerCard = buttonElement.closest(".beer-card"); // ✅ Get parent card
@@ -84,7 +84,6 @@ window.addToCart = function (name, price, buttonElement) {
 };
 
 
-// ✅ Function to update the cart UI
 // ✅ Function to update the cart UI
 // ✅ Function to update the cart UI
 function updateCart() {
@@ -122,7 +121,7 @@ window.removeFromCart = function (index) {
 function getFormattedDateTime() {
     // Create date object in IST timezone
     const now = new Date();
-    const istOptions = { 
+    const istOptions = {
         timeZone: 'Asia/Kolkata',
         year: 'numeric',
         month: '2-digit',
@@ -132,20 +131,19 @@ function getFormattedDateTime() {
         second: '2-digit',
         hour12: false
     };
-    
+
     const istDateTime = now.toLocaleString('en-GB', istOptions);
     const [date, time] = istDateTime.split(', ');
     const [day, month, year] = date.split('/');
-    
+
     return {
         date: `${year}-${month}-${day}`, // YYYY-MM-DD format
         time: time // HH:MM:SS format
     };
 }
 
-
-// ✅ Function to record a sale
-async function recordSale() {
+// ✅ Make recordSale function globally available
+window.recordSale = async function () {
     if (!db) {
         alert("Firestore (db) is not initialized. Please refresh the page.");
         return;
@@ -192,13 +190,12 @@ async function recordSale() {
         alert(`✅ Sale Recorded Successfully as Order #${nextOrderNumber}`);
         cart = [];
         updateCart();
-        loadSales();
+        if (typeof loadSales === 'function') {
+            loadSales();
+        }
 
     } catch (error) {
         console.error("❌ Error recording sale:", error);
         alert("Error recording sale. Please try again.");
     }
-}
-
-// ✅ Make `recordSale` function globally available
-window.recordSale = recordSale;
+};

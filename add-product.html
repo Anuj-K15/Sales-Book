@@ -21,9 +21,6 @@
             <button onclick="window.location.href='sales.html'" class="nav-btn">
                 <i class="fas fa-chart-line"></i> View Sales
             </button>
-            <button onclick="window.location.href='index.html'" class="nav-btn">
-                <i class="fas fa-sign-out"></i> Logout
-            </button>
         </div>
 
         <h1>Add New Product</h1>
@@ -50,85 +47,10 @@
         </div>
     </div>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <!-- Load Firebase config after Firebase is defined -->
     <script type="module" src="firebase-config.js"></script>
-    <!-- <script>
-        function compressImage(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        
-                        // Maximum dimensions
-                        const MAX_WIDTH = 800;
-                        const MAX_HEIGHT = 800;
-
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // Compress to JPEG with quality 0.7
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        document.getElementById('product-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            if (!window.db) {
-                alert("Firestore is not initialized!");
-                return;
-            }
-
-            const productName = document.getElementById('product-name').value;
-            const productPrice = document.getElementById('product-price').value;
-            const productImageFile = document.getElementById('product-image').files[0];
-
-            try {
-                const compressedImage = await compressImage(productImageFile);
-                
-                const newProduct = {
-                    name: productName,
-                    price: parseFloat(productPrice),
-                    image: compressedImage,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                await window.db.collection('products').add(newProduct);
-                document.getElementById('product-form').reset();
-                alert('Product added successfully!');
-                window.location.href = 'record.html';
-            } catch (error) {
-                console.error("Error adding product:", error);
-                alert('Error adding product. Please try again.');
-            }
-        });
-    </script> -->
     <script type="module" src="add-product.js"></script>
 </body>
 
