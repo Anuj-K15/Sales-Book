@@ -1,0 +1,333 @@
+/* 
+ * Search Bar Component Styles
+ * For BeerZone Sales Management System
+ */
+
+/* Search Container */
+.search-container {
+  margin-bottom: 20px;
+  width: 100%;
+  position: relative;
+}
+
+/* Search Bar */
+.search-bar {
+  display: flex;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.search-bar input:focus {
+  background-color: #f9f9f9;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Accessibility focus styles */
+.search-bar input:focus-visible {
+  outline: 2px solid #2c7c2d;
+  outline-offset: -1px;
+}
+
+.search-bar button {
+  background-color: #2c7c2d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.search-bar button:hover,
+.search-bar button:focus {
+  background-color: #215b22;
+}
+
+.search-bar button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
+}
+
+/* Typing indicator for live search */
+@keyframes typing {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.search-bar input:focus {
+  background-size: 200% 200%;
+  animation: typing 2s ease infinite;
+  background-image: linear-gradient(
+    to right,
+    rgba(76, 175, 80, 0) 0%,
+    rgba(76, 175, 80, 0.05) 50%,
+    rgba(76, 175, 80, 0) 100%
+  );
+}
+
+/* Search Options */
+.search-options {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.search-option {
+  padding: 8px 16px;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  border-radius: 20px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.search-option:hover {
+  background-color: #e0e0e0;
+}
+
+.search-option.active {
+  background-color: #2c7c2d;
+  color: white;
+}
+
+/* Keyboard accessibility for filter options */
+.search-option:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2c7c2d;
+}
+
+/* Search Results Count */
+.search-results-count {
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #666;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Search Results */
+#search-results {
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.search-result-item {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  transition: all 0.2s ease;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Keyboard navigation styles */
+.search-result-item:focus {
+  outline: none;
+  background-color: #f0f9f0;
+}
+
+.search-result-item[aria-selected="true"] {
+  background-color: #e8f5e9;
+  border-left: 3px solid #2c7c2d;
+  padding-left: 12px;
+}
+
+/* Result item details */
+.search-result-item h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.search-result-item .price {
+  font-weight: bold;
+  margin: 5px 0;
+  color: #333;
+}
+
+/* Stock status in results */
+.result-status {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.result-status .in-stock {
+  color: #2c7c2d;
+  font-weight: 500;
+}
+
+.result-status .low-stock {
+  color: #ff9800;
+  font-weight: 500;
+}
+
+.result-status .out-of-stock {
+  color: #e53935;
+  font-weight: 500;
+}
+
+/* Empty Results Message */
+.empty-results {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+/* Highlight class for search matches */
+.highlight {
+  background-color: rgba(44, 124, 45, 0.15);
+  padding: 2px 0;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-bar input {
+    width: 100%;
+    border-bottom: 1px solid #eee;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .search-bar button {
+    width: 100%;
+    border-radius: 0 0 4px 4px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .search-bar button::before {
+    content: "\f002"; /* FontAwesome search icon */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 14px;
+  }
+
+  #search-results {
+    max-height: 300px;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#search-results,
+.search-results-count {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* BeerZone specific integrations */
+.search-result-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-result-item h3 {
+  flex: 1 0 60%;
+}
+
+.search-result-item .price {
+  flex: 0 0 20%;
+  text-align: right;
+}
+
+.search-result-item .result-status {
+  flex: 0 0 20%;
+  text-align: right;
+}
+
+@media (max-width: 576px) {
+  .search-result-item h3,
+  .search-result-item .price,
+  .search-result-item .result-status {
+    flex: 0 0 100%;
+    text-align: left;
+    margin-bottom: 5px;
+  }
+}
+
+/* Hide search button on larger screens since we're using search-as-you-type */
+@media (min-width: 769px) {
+  .search-bar button {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: none;
+    opacity: 0;
+    /* Keep it in the DOM for accessibility but hide it visually */
+    position: absolute;
+    right: 0;
+  }
+
+  /* Add a search icon to the input for visual indication */
+  .search-bar {
+    position: relative;
+  }
+
+  .search-bar::after {
+    content: "\f002"; /* FontAwesome search icon */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #2c7c2d;
+    font-size: 18px;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .search-bar input {
+    padding-right: 40px; /* Make room for the search icon */
+  }
+}

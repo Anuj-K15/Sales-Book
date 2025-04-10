@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inventory Management - BeerZone</title>
+    <link rel="stylesheet" href="inventory.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Add search bar component CSS -->
+    <link rel="stylesheet" href="search-bar.css">
+    <!-- Add SheetJS library for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="navigation-buttons">
+            <button onclick="window.location.href='record.html'" class="nav-btn">
+                <i class="fas fa-receipt"></i> Record Sales
+            </button>
+            <button onclick="window.location.href='sales.html'" class="nav-btn">
+                <i class="fas fa-chart-line"></i> View Sales
+            </button>
+            <button onclick="window.location.href='add-product.html'" class="nav-btn">
+                <i class="fas fa-plus"></i> Add Product
+            </button>
+            <button onclick="window.location.href='delete-product.html'" class="nav-btn">
+                <i class="fas fa-trash"></i> Delete Product
+            </button>
+        </div>
+
+        <h1>Inventory Management</h1>
+
+        <!-- Form Section for Adding/Updating Inventory -->
+        <div class="inventory-form">
+            <h2><i class="fas fa-boxes"></i> Manage Inventory Item</h2>
+            <form id="inventory-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label for="product-select">Select Product</label>
+                    <select id="product-select" required>
+                        <option value="">-- Select Product --</option>
+                        <!-- Will be populated dynamically from Firebase -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="current-stock">Current Stock</label>
+                    <input type="number" id="current-stock" readonly>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label for="stock-quantity">Quantity to Add/Remove</label>
+                        <input type="number" id="stock-quantity" required>
+                    </div>
+                    <div class="form-group half">
+                        <label for="stock-operation">Operation</label>
+                        <select id="stock-operation" required>
+                            <option value="add">Add Stock</option>
+                            <option value="remove">Remove Stock</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="stock-notes">Notes (optional)</label>
+                    <textarea id="stock-notes" rows="3"
+                        placeholder="Enter any notes about this stock change"></textarea>
+                </div>
+
+                <div class="action-buttons">
+                    <button type="submit" class="submit-btn" id="save-inventory">
+                        <i class="fas fa-save"></i> Update Inventory
+                    </button>
+                    <button type="button" class="reset-btn" id="reset-form">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Inventory Overview Section -->
+        <div class="inventory-overview">
+            <div class="section-header">
+                <h2><i class="fas fa-clipboard-list"></i> Inventory Overview</h2>
+                <button class="download-btn" onclick="exportInventoryToExcel()">
+                    <i class="fas fa-download"></i> Export Inventory
+                </button>
+            </div>
+
+            <!-- Replace the old search bar with our new search component -->
+            <div id="inventory-search-container"></div>
+
+            <div class="table-container">
+                <table id="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Current Stock</th>
+                            <th>Last Updated</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-list">
+                        <!-- Will be populated dynamically from Firebase -->
+                        <tr class="loading-row">
+                            <td colspan="5">Loading inventory data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Inventory History Section -->
+        <div class="inventory-history">
+            <div class="section-header">
+                <h2><i class="fas fa-history"></i> Inventory History</h2>
+                <button class="download-btn" onclick="exportInventoryHistoryToExcel()">
+                    <i class="fas fa-download"></i> Export History
+                </button>
+            </div>
+            <div class="table-container">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Product</th>
+                            <th>Change</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-list">
+                        <!-- Will be populated dynamically from Firebase -->
+                        <tr class="loading-row">
+                            <td colspan="4">Loading history data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Confirmation -->
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Confirm Action</h3>
+            <p id="modal-message">Are you sure you want to perform this action?</p>
+            <div class="modal-buttons">
+                <button class="cancel-btn" id="modal-cancel">Cancel</button>
+                <button class="confirm-btn" id="modal-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="inventory-export.js"></script>
+    <script src="search-bar.js"></script>
+    <script type="module" src="inventory.js"></script>
+
+    <!-- Initialize search bar for inventory -->
+    <script type="module">
+        document.addEventListener('DOMContentLoaded', function () {
+            // The inventory.js file will initialize the search component once data is loaded
+        });
+    </script>
+</body>
+
+</html>

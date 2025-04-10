@@ -1,0 +1,34 @@
+<!-- BeerZone Search Bar Component -->
+<!-- Include this component in your HTML pages where you need a search bar -->
+<!-- Don't forget to also include the search-bar.css and search-bar.js files -->
+
+<div class="search-container">
+    <div class="search-bar">
+        <input type="text" placeholder="Search...">
+        <button>
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+
+    <div class="search-options">
+        <span class="search-option" data-filter="name">Name</span>
+        <span class="search-option" data-filter="category">Category</span>
+        <span class="search-option" data-filter="date">Date</span>
+        <span class="search-option" data-filter="price">Price</span>
+    </div>
+
+    <div class="search-results-count"></div>
+</div>
+
+<!-- 
+    Usage instructions:
+    1. Include the search-bar.css file in your HTML head:
+       <link rel="stylesheet" href="search-bar.css">
+    
+    2. Include the search-bar.js file before the closing body tag:
+       <script src="search-bar.js"></script>
+    
+    3. Copy and paste this component where you want the search bar to appear
+    
+    4. Customize the search options as needed for your specific page
+-->

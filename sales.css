@@ -14,28 +14,33 @@ body {
 /* Container styles */
 .container {
   width: 93%;
-  height: 95%;
+  max-width: 1400px;
   padding: 25px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 5px solid #222;
-  border-radius: 15px;
-  box-shadow: 10px 10px 0px #222;
-  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #222;
+  border-radius: 10px;
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.2);
+  margin: 20px auto;
+  overflow: hidden; /* Prevent content overflow */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 /* Heading styles */
 h1 {
-  font-size: 3rem;
+  font-size: clamp(1.8rem, 4vw, 3rem);
   margin-bottom: 2rem;
   text-align: center;
   text-transform: uppercase;
   color: #fff;
   background: linear-gradient(90deg, #ff6b6b, #e63946);
-  padding: 1rem 2rem;
-  border: 4px solid #000;
-  border-radius: 15px;
-  box-shadow: 6px 6px 0 #000;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  padding: clamp(0.8rem, 3vw, 1rem) clamp(1rem, 5vw, 2rem);
+  border: 2px solid #000;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Navigation Buttons */
@@ -49,28 +54,30 @@ h1 {
 .nav-btn {
   background-color: #4caf50;
   color: white;
-  border: 4px solid black;
-  padding: 12px 24px;
-  font-size: 16px;
+  border: 1px solid #3d8b40;
+  padding: clamp(8px, 2vw, 12px) clamp(10px, 3vw, 24px);
+  font-size: clamp(14px, 2vw, 16px);
   font-weight: bold;
   cursor: pointer;
-  border-radius: 10px;
-  box-shadow: 6px 6px 0 black;
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  width: 100%;
 }
 
 .nav-btn:hover {
   background-color: #45a049;
-  transform: translateY(-3px);
-  box-shadow: 8px 8px 0 black;
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .nav-btn:active {
-  transform: translateY(2px);
-  box-shadow: 2px 2px 0 black;
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Back Button */
@@ -81,205 +88,390 @@ h1 {
 .back-to-sales-btn button {
   background-color: #4caf50;
   color: white;
-  border: 3px solid black;
-  padding: 8px 16px;
-  font-size: 14px;
+  border: 1px solid #3d8b40;
+  padding: clamp(6px, 2vw, 8px) clamp(12px, 3vw, 16px);
+  font-size: clamp(12px, 2vw, 14px);
   cursor: pointer;
   font-weight: bold;
-  border-radius: 5px;
-  box-shadow: 3px 3px 0 black;
+  border-radius: 4px;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease-in-out;
 }
 
 .back-to-sales-btn button:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 black;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Table Container */
 .table-container {
-  width: 98%;
+  width: 100%;
   flex-grow: 1;
   background-color: #fff;
-  border: 4px solid #000;
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 5px 5px 0 #000;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: clamp(0.5rem, 2vw, 1rem);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
   text-align: center;
+  margin-bottom: 20px;
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
+  min-width: 600px; /* Ensures table doesn't get too narrow */
 }
 
 th,
 td {
-  padding: 0.8rem;
-  font-size: 1rem;
-  border: 3px solid #000;
+  padding: clamp(0.5rem, 2vw, 0.8rem);
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  border: 1px solid #ddd;
   background-color: #fff;
   text-align: center;
 }
 
 th {
-  background-color: #4cc9f0;
-  color: #000;
+  background-color: #f0f0f0;
+  color: #333;
   text-transform: uppercase;
+  font-size: clamp(0.7rem, 2vw, 0.9rem);
+  white-space: nowrap;
+  font-weight: 600;
 }
 
 tr:hover {
-  background-color: #ffeedb;
+  background-color: #f9f9f9;
 }
 
 /* Delete Button */
 .delete-btn {
   background-color: #ff6b6b;
-  color: #000;
-  border: 3px solid #000;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  color: #fff;
+  border: 1px solid #e63946;
+  padding: clamp(0.3rem, 1.5vw, 0.5rem) clamp(0.5rem, 2vw, 1rem);
+  font-size: clamp(0.7rem, 1.5vw, 0.9rem);
   cursor: pointer;
-  box-shadow: 4px 4px 0 #000;
-  transition: transform 0.2s ease-in-out;
-  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out, background-color 0.2s ease;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 .delete-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 #000;
+  background-color: #e63946;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Summary Section */
 .summary {
   display: flex;
   justify-content: space-between;
+  gap: clamp(10px, 3vw, 20px);
   width: 100%;
-  padding: 10px;
+  padding: 10px 0;
   flex-wrap: wrap;
 }
 
 .summary-card {
   background-color: #4caf50;
-  padding: 1rem;
-  border: 4px solid #000;
-  border-radius: 10px;
-  box-shadow: 5px 5px 0 #000;
-  width: 45%;
+  padding: clamp(0.8rem, 2vw, 1rem);
+  border: 1px solid #3d8b40;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  min-width: 200px;
   text-align: center;
   margin-top: 10px;
   color: white;
 }
 
 .summary-card h2 {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
   margin-bottom: 0.3rem;
+  font-weight: 600;
 }
 
 .summary-card p {
-  font-size: 1.8rem;
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
   font-weight: bold;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
+/* Date separator row */
+tr.date-separator td {
+  background-color: #f0f0f0;
+  color: #333;
+  text-align: center;
+  font-weight: bold;
+  padding: clamp(0.5rem, 2vw, 0.8rem);
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  border: 1px solid #ddd;
+}
+
+/* Date header with download button */
+.date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Download button for each day */
+.download-day-btn {
+  background-color: #ffcc00;
+  color: #000;
+  border: 1px solid #e0b000;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: 4px;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.download-day-btn:hover {
+  background-color: #e0b000;
+  transform: translateY(-2px);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.download-day-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0px 0px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Download buttons in summary cards */
+.download-btn {
+  background-color: #ffcc00;
+  color: black;
+  border: 1px solid #3d8b40;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.download-btn:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.download-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0px 0px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design - Desktop (1200px and above) */
+@media (min-width: 1200px) {
+  .container {
+    width: 90%;
+    padding: 30px;
+  }
+
+  .table-container {
+    padding: 1.5rem;
+  }
+
+  .summary-card {
+    max-width: 45%;
+  }
+}
+
+/* Responsive Design - Laptop (992px to 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .container {
+    width: 90%;
+  }
+
+  .table-container {
+    padding: 1.2rem;
+  }
+
+  .summary-card {
+    max-width: 45%;
+  }
+}
+
+/* Responsive Design - Tablet (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .container {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .table-container {
+    padding: 1rem;
+    width: 96%;
+  }
+
+  .navigation-buttons {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Responsive Design - Mobile (576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
   .container {
     width: 95%;
     padding: 15px;
   }
 
-  h1 {
-    font-size: 2.2rem;
-    padding: 0.8rem;
-  }
-
-  .nav-btn {
-    font-size: 0.9rem;
-    padding: 12px;
-  }
-
-  
-
   .table-container {
     padding: 0.8rem;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .navigation-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
   }
 
   .summary {
     flex-direction: column;
-    align-items: center;
   }
 
   .summary-card {
-    width: 90%;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    width: 100%;
-    padding: 15px;
-  }
-
-  .navigation-buttons {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .nav-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 8px;
-    font-size: 0.9rem;
-  }
-
-  .table-container {
     width: 95%;
-    overflow-x: auto;
-  }
-
-  th,
-  td {
-    padding: 0.6rem;
-    font-size: 0.9rem;
-  }
-
-  .summary-card {
-    width: 100%;
-    margin-bottom: 10px;
+    max-width: none;
   }
 }
 
-@media (max-width: 480px) {
+/* Responsive Design - Small Mobile (below 576px) */
+@media (max-width: 575px) {
   .container {
-    width: 100%;
-    padding: 15px;
+    width: 95%;
+    padding: 10px;
+    border-width: 1px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   h1 {
     font-size: 1.8rem;
-    padding: 0.6rem;
+    border-width: 1px;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
   }
 
-  .nav-btn {
-    font-size: 0.85rem;
-    padding: 12px;
+  .table-container {
+    padding: 0.5rem;
+    border-width: 1px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+  }
+
+  .navigation-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
   }
 
   th,
   td {
     padding: 0.5rem;
     font-size: 0.8rem;
+    border-width: 1px;
+  }
+
+  .summary {
+    flex-direction: column;
+    gap: 10px;
   }
 
   .summary-card {
-    width: 100%;
+    width: 93%;
+    max-width: none;
     padding: 0.8rem;
+    border-width: 1px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
-  .table-container {
-    width: 95%;
-    overflow-x: auto;
+  .delete-btn {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+    border-width: 1px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  tr.date-separator td {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+    border-width: 1px;
+  }
+
+  .date-header {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .download-day-btn {
+    margin-top: 5px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .download-btn {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+}
+
+/* Responsive styles for download buttons */
+@media (max-width: 767px) {
+  .date-header {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .download-day-btn {
+    margin-top: 5px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  .download-btn {
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 575px) {
+  .date-header {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .download-day-btn {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    border-width: 1px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .download-btn {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-width: 1px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 }

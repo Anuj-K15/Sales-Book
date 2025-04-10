@@ -3,10 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sales Dashboard - Neubrutalism</title>
     <link rel="stylesheet" href="sales.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Add SheetJS library for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -20,6 +22,9 @@
             </button>
             <button onclick="window.location.href='record.html'" class="nav-btn">
                 <i class="fas fa-receipt"></i></i> Record Sales
+            </button>
+            <button onclick="window.location.href='inventory.html'" class="nav-btn">
+                <i class="fas fa-boxes"></i> Inventory
             </button>
         </div>
         <h1>Sales Dashboard</h1>
@@ -53,10 +58,16 @@
             <div class="summary-card">
                 <h2>Today's Total Sale</h2>
                 <p>₹0</p>
+                <button class="download-btn" onclick="exportSalesToExcel(getTodayIST())">
+                    <i class="fas fa-download"></i> Download Today's Report
+                </button>
             </div>
             <div class="summary-card">
                 <h2>This Month's Total Sale</h2>
                 <p>₹0</p>
+                <button class="download-btn" onclick="exportSalesToExcel(null, getCurrentMonthYear())">
+                    <i class="fas fa-download"></i> Download Monthly Report
+                </button>
             </div>
         </div>
     </div>
@@ -81,6 +92,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script type="module" src="firebase-config.js"></script> <!-- ✅ Firebase first -->
+    <script type="module" src="excel-export.js"></script> <!-- ✅ Excel export functionality -->
     <script type="module" src="sales-page.js"></script> <!-- ✅ Load sales after Firebase -->
 
 </body>

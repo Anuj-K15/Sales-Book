@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeerZone Search Component Example</title>
+
+    <!-- Include the search bar CSS -->
+    <link rel="stylesheet" href="search-bar.css">
+
+    <!-- Optional: Include Roboto font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Additional styles for the demo page */
+        body {
+            font-family: 'Roboto', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        h1,
+        h2 {
+            color: #333;
+        }
+
+        .demo-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-result-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .search-result-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .result-name {
+            font-weight: bold;
+            font-size: 18px;
+            width: 40%;
+        }
+
+        .result-category {
+            width: 30%;
+            color: #666;
+        }
+
+        .result-price {
+            width: 30%;
+            text-align: right;
+            font-weight: 500;
+            color: #2c7c2d;
+        }
+
+        @media (max-width: 768px) {
+
+            .result-name,
+            .result-category,
+            .result-price {
+                width: 100%;
+                text-align: left;
+                margin-bottom: 5px;
+            }
+        }
+
+        code {
+            display: block;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>BeerZone Search Component Example</h1>
+
+    <div class="demo-section">
+        <h2>Default Search Implementation</h2>
+
+        <!-- Search Container -->
+        <div class="search-container">
+            <div class="search-bar">
+                <input type="text" placeholder="Search for beers...">
+                <button>Search</button>
+            </div>
+
+            <div class="search-options">
+                <span class="search-option active" data-filter="name">Name</span>
+                <span class="search-option" data-filter="category">Category</span>
+                <span class="search-option" data-filter="price">Price</span>
+            </div>
+
+            <div class="search-results-count"></div>
+        </div>
+
+        <!-- Search Results -->
+        <div id="search-results"></div>
+    </div>
+
+    <div class="demo-section">
+        <h2>How to Use</h2>
+        <p>To implement the search bar in your own pages, follow these steps:</p>
+
+        <h3>Step 1: Include the Required Files</h3>
+        <code>
+&lt;link rel="stylesheet" href="search-bar.css"&gt;
+&lt;script src="search-bar.js"&gt;&lt;/script&gt;
+        </code>
+
+        <h3>Step 2: Add the HTML Structure</h3>
+        <code>
+&lt;div class="search-container"&gt;
+    &lt;div class="search-bar"&gt;
+        &lt;input type="text" placeholder="Search for beers..."&gt;
+        &lt;button&gt;Search&lt;/button&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="search-options"&gt;
+        &lt;span class="search-option active" data-filter="name"&gt;Name&lt;/span&gt;
+        &lt;span class="search-option" data-filter="category"&gt;Category&lt;/span&gt;
+        &lt;span class="search-option" data-filter="price"&gt;Price&lt;/span&gt;
+    &lt;/div&gt;
+    
+    &lt;div class="search-results-count"&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div id="search-results"&gt;&lt;/div&gt;
+        </code>
+
+        <h3>Step 3: Initialize with Custom Data</h3>
+        <code>
+&lt;script&gt;
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchBar = new SearchBar({
+            dataSource: [
+                { name: 'Beer 1', category: 'IPA', price: '$5.99' },
+                { name: 'Beer 2', category: 'Stout', price: '$6.99' },
+                { name: 'Beer 3', category: 'Lager', price: '$4.99' }
+                // Add more items as needed
+            ]
+        });
+    });
+&lt;/script&gt;
+        </code>
+
+        <h3>Step 4: Customize Options (Optional)</h3>
+        <code>
+const searchBar = new SearchBar({
+    // Selectors
+    searchContainer: '.search-container',
+    searchInput: '.search-bar input',
+    searchButton: '.search-bar button',
+    searchOptions: '.search-option',
+    resultsContainer: '#search-results',
+    resultsCountElement: '.search-results-count',
+    
+    // Options
+    minChars: 2,                // Minimum characters for search
+    highlightResults: true,     // Highlight matching text
+    
+    // Custom search function (optional)
+    onSearch: function(query, filter) {
+        console.log(`Searching for ${query} in ${filter}`);
+        // Implement custom search logic here
+    },
+    
+    // Data source (optional if onSearch is provided)
+    dataSource: yourDataArray // Array or function returning data
+});
+        </code>
+    </div>
+
+    <!-- Include the search bar JS -->
+    <script src="search-bar.js"></script>
+
+    <!-- Initialize the search with demo data -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Sample data for demonstration
+            const beerData = [
+                { name: 'Hoppy IPA', category: 'IPA', price: '$5.99' },
+                { name: 'Chocolate Stout', category: 'Stout', price: '$6.99' },
+                { name: 'Classic Lager', category: 'Lager', price: '$4.99' },
+                { name: 'Citrus Pale Ale', category: 'Pale Ale', price: '$5.49' },
+                { name: 'Double IPA', category: 'IPA', price: '$7.99' },
+                { name: 'Coffee Porter', category: 'Porter', price: '$6.49' },
+                { name: 'Wheat Beer', category: 'Wheat', price: '$5.29' },
+                { name: 'Amber Ale', category: 'Amber Ale', price: '$5.79' },
+                { name: 'Fruit Sour', category: 'Sour', price: '$6.99' },
+                { name: 'Pilsner', category: 'Pilsner', price: '$4.79' }
+            ];
+
+            // Initialize search with the sample data
+            const searchBar = new SearchBar({
+                dataSource: beerData
+            });
+        });
+    </script>
+</body>
+
+</html>

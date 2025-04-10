@@ -13,29 +13,31 @@ body {
 
 /* Container styles */
 .container {
-  width: 93%;
-  height: 95%;
-  padding: 25px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 5px solid #222;
-  border-radius: 15px;
-  box-shadow: 10px 10px 0px #222;
-  max-width: 1400px; /* Added max-width for better large screen handling */
+  width: 92%;
+  max-width: 1400px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #222;
+  border-radius: 10px;
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.2);
+  margin: 20px auto;
+  overflow: hidden; /* Prevent content overflow */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 /* Heading styles */
 h1 {
-  font-size: clamp(1.5rem, 4vw, 3rem); /* Responsive font size */
+  font-size: clamp(1.8rem, 4vw, 3rem);
   margin-bottom: 2rem;
   text-align: center;
   text-transform: uppercase;
   color: #fff;
   background: linear-gradient(90deg, #ff6b6b, #e63946);
-  padding: 1rem 2rem;
-  border: 4px solid #000;
-  border-radius: 15px;
-  box-shadow: 6px 6px 0 #000;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  padding: clamp(0.8rem, 3vw, 1rem) clamp(1rem, 5vw, 2rem);
+  border: 2px solid #000;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   width: fit-content;
   margin-left: auto;
   margin-right: auto;
@@ -53,13 +55,13 @@ h1 {
   width: 100%;
   background-color: #4caf50;
   color: white;
-  border: 4px solid black;
-  padding: 12px;
+  border: 1px solid #3d8b40;
+  padding: clamp(8px, 2vw, 12px);
   font-size: clamp(14px, 2vw, 16px);
   font-weight: bold;
   cursor: pointer;
-  border-radius: 10px;
-  box-shadow: 6px 6px 0 black;
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -69,281 +71,515 @@ h1 {
 
 .nav-btn:hover {
   background-color: #45a049;
-  transform: translateY(-3px);
-  box-shadow: 8px 8px 0 black;
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .nav-btn:active {
-  transform: translateY(2px);
-  box-shadow: 2px 2px 0 black;
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Beer List - Responsive Grid */
 .beer-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  padding: 12px;
   width: 100%;
-  justify-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 /* Individual beer card */
 .beer-card {
   width: 100%;
-  max-width: 250px;
+  height: 100%;
   background: #fff;
-  padding: 20px;
-  border-radius: 15px;
+  padding: 12px;
+  border-radius: 8px;
   text-align: center;
-  border: 4px solid black;
-  box-shadow: 6px 6px 0px black;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 .beer-card:hover {
-  transform: scale(1.05);
-  box-shadow: 10px 10px 0px black;
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+  border-color: #ccc;
 }
 
 /* Beer image */
 .beer-card img {
-  width: 100%;
-  height: 130px;
+  width: 80%;
+  height: 110px;
   object-fit: contain;
   background-color: white;
   transition: transform 0.3s ease;
-  border-radius: 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
 }
 
 .beer-card img:hover {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
-/* Responsive Adjustments */
-@media (max-width: 1200px) {
-  .beer-list {
-    grid-template-columns: repeat(3, 1fr);
-  }
+/* Beer card heading and price */
+.beer-card h3 {
+  font-size: 0.95rem;
+  margin: 8px 0 5px;
+  height: 2.4em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.2;
 }
 
-@media (max-width: 900px) {
-  .beer-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .container {
-    width: 90%;
-    padding: 15px;
-  }
+.beer-card p {
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin: 6px 0 10px;
+  color: #e63946;
 }
 
-@media (max-width: 600px) {
-  .beer-list {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  
-  .beer-card {
-    padding: 10px;
-    font-size: 0.9rem;
-  }
-  
-  .container {
-    width: 95%;
-    padding: 10px;
-  }
-  
-  /* Adjust card size for mobile */
-  .beer-card {
-    width: 75%;
-    max-width: none;
-  }
-  
-  /* Make buttons more touch-friendly */
-  .beer-card button {
-    padding: 10px 20px;
-    font-size: 16px;
-  }
-  
-  .quantity {
-    width: 50px;
-    padding: 8px;
-    font-size: 16px;
-  }
+/* Quantity meter (Input field) */
+.quantity {
+  width: 55px;
+  margin: 8px 0;
+  padding: 8px 5px;
+  text-align: center;
+  font-size: 0.9rem;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  color: #333;
+  transition: all 0.3s ease;
 }
 
-  
-  /* Quantity meter (Input field) */
-  .quantity {
-    width: 65px;
-    margin: 10px 0;
-    padding: 10px;
-    text-align: center;
-    font-size: 18px;
-    background: #fff;
-    border: 4px solid #000;
-    border-radius: 8px;
-    box-shadow: 5px 5px 0px #000;
-    font-weight: bold;
-    color: #333;
-    transition: all 0.3s ease;
-  }
-  
-  .quantity:focus {
-    outline: none;
-    box-shadow: 5px 5px 0px #e0b000;
-    border-color: #e0b000;
-  }
-  
-  /* Add to Cart button */
-  .beer-card button {
-    background: #ffcc00;
-    border: 4px solid #000;
-    padding: 15px 30px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 12px;
-    cursor: pointer;
-    box-shadow: 5px 5px 0px #000;
-    color: #000;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    transition: all 0.3s ease;
-  }
-  
-  .beer-card button:hover {
-    background: #e0b000;
-    transform: translateY(-5px);
-    box-shadow: 8px 8px 0px #000;
-  }
-  
-  .beer-card button:active {
-    transform: translateY(2px);
-    box-shadow: 2px 2px 0px #000;
-  }
-  
+.quantity:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+/* Add to Cart button */
+.beer-card button {
+  background: #ffcc00;
+  border: 1px solid #e0b000;
+  padding: 10px 15px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.beer-card button:hover {
+  background: #e0b000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.beer-card button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
 /* Loading Message */
 .loading-message {
   text-align: center;
   padding: 20px;
   color: #666;
-  font-size: 1.1em;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
 }
 
 /* Cart Styles */
 .cart {
-  margin-top: 30px;
-  padding: clamp(15px, 3vw, 25px);
+  margin-top: 20px;
+  padding: 15px;
   background: white;
-  border: 4px solid black;
-  border-radius: 15px;
-  box-shadow: 6px 6px 0px black;
-  width: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box; /* Include padding in width calculation */
+  overflow: hidden; /* Prevent content overflow */
 }
 
 .cart-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 8px;
   border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
 .cart h3 {
-  font-size: 26px;
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
   font-weight: bold;
+  color: #333;
 }
 
 .cart .total-amount {
   margin-top: 20px;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: #333;
 }
 
 .cart select {
-  padding: 8px;
-  font-size: 16px;
-  border: 4px solid black;
-  border-radius: 8px;
+  padding: clamp(6px, 2vw, 8px);
+  font-size: clamp(14px, 2.5vw, 16px);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
 }
 
-/* ✅ Remove Button in Cart */
-/* ✅ Remove Button in Cart */
+.payment-method {
+  margin: 15px 0;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+}
+
+/* Remove Button in Cart */
 .remove-btn {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px;
-  color: red;
+  font-size: clamp(16px, 3vw, 18px);
+  color: #e63946;
   margin-left: 10px;
   transition: transform 0.2s ease;
 }
 
 .remove-btn:hover {
-  transform: scale(1.2);
-  color: darkred;
+  transform: scale(1.1);
+  color: #c1121f;
 }
-
 
 /* Record Sale Button */
 .record-btn {
   background: #28a745;
   color: white;
-  padding: 20px 40px;
-  font-size: 18px;
+  padding: clamp(15px, 3vw, 20px) clamp(20px, 5vw, 40px);
+  font-size: clamp(16px, 3vw, 18px);
   font-weight: bold;
-  border-radius: 12px;
+  border-radius: 6px;
   cursor: pointer;
   width: 100%;
-  box-shadow: 6px 6px 0px black;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   transition: all 0.3s ease;
   margin-top: 15px;
-  border: 4px solid #000;
+  border: 1px solid #218838;
 }
 
 .record-btn:hover {
   background: #218838;
-  transform: translateY(-5px);
-  box-shadow: 8px 8px 0px black;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .record-btn:active {
-  transform: translateY(2px);
-  box-shadow: 2px 2px 0px black;
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .navigation-buttons {
-    flex-direction: column;
-    gap: 10px;
+/* Product image container */
+.product-image-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 5px;
+  padding: 2px;
+  height: 110px;
+}
+
+/* Product info container */
+.product-info {
+  width: 100%;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Inventory status styles */
+.inventory-status {
+  font-size: 0.75rem;
+  margin: 6px 0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  background-color: #e6f7e6;
+  color: #2e7d32;
+  border: 1px solid #2e7d32;
+  width: 95%;
+  text-align: center;
+}
+
+.inventory-status.low-stock {
+  background-color: #fff8e1;
+  color: #ff8f00;
+  border: 1px solid #ff8f00;
+}
+
+.inventory-status.out-of-stock {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #c62828;
+}
+
+.beer-card button:disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  border: 1px solid #999999;
+}
+
+.beer-card button:disabled:hover {
+  background: #cccccc;
+  transform: none;
+  box-shadow: none;
+}
+
+.beer-card input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  border-color: #cccccc;
+}
+
+/* Responsive Design - Desktop (1200px and above) */
+@media (min-width: 1200px) {
+  .container {
+    width: 90%;
+    padding: 30px;
   }
 
-  .nav-btn {
-    width: 100%;
-    justify-content: center;
+  .beer-list {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 25px;
   }
 
-  .cart {
-    width: 94%;
+  .beer-card h3 {
+    font-size: 1rem;
+  }
+
+  .beer-card button {
+    font-size: 0.9rem;
   }
 }
 
-@media (max-width: 480px) {
+/* Responsive Design - Laptop (992px to 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .container {
+    width: 90%;
+  }
+
+  .beer-list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+/* Responsive Design - Tablet (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .container {
+    width: 90%;
+    padding: 20px;
+  }
+
+  .beer-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    padding: 12px;
+  }
+
+  .beer-card {
+    padding: 12px;
+  }
+}
+
+/* Responsive Design - Mobile (576px to 767px) */
+@media (min-width: 576px) and (max-width: 767px) {
+  .container {
+    width: 95%;
+    padding: 15px;
+  }
+
+  .beer-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 10px;
+  }
+
+  .beer-card {
+    padding: 10px;
+  }
+}
+
+/* Responsive Design - Small Mobile (below 576px) */
+@media (max-width: 575px) {
+  .container {
+    width: 96%;
+    padding: 8px;
+    border-width: 1px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .beer-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 6px;
+  }
+
+  .beer-card {
+    padding: 8px;
+  }
+
+  .product-image-container {
+    height: 85px;
+  }
+
+  .beer-card img {
+    height: 80px;
+    width: 85%;
+  }
+
+  .beer-card h3 {
+    font-size: 0.8rem;
+    height: 2.2em;
+    margin: 4px 0 2px;
+  }
+
+  .beer-card p {
+    font-size: 0.8rem;
+    margin: 4px 0 6px;
+  }
+
+  .inventory-status {
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    margin: 4px 0;
+  }
+
+  .quantity {
+    width: 40px;
+    padding: 4px;
+    font-size: 0.75rem;
+    margin: 6px 0;
+  }
+
+  .beer-card button {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+    margin-top: 6px;
+  }
+
   h1 {
-    font-size: 2rem;
-    padding: 1rem;
+    font-size: 1.5rem;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
   }
 
   .cart {
-    width: 89%;
-    margin-top: 20px;
+    padding: 10px;
+    margin-top: 15px;
   }
+
+  .cart h3 {
+    font-size: 1.1rem;
+  }
+
+  .cart-item {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+
+  .cart .total-amount {
+    font-size: 0.9rem;
+    margin-top: 12px;
+  }
+
+  .payment-method {
+    margin: 10px 0;
+    font-size: 0.85rem;
+  }
+
+  .cart select {
+    padding: 4px;
+    font-size: 0.85rem;
+  }
+
+  .record-btn {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+  }
+}
+
+/* Search bar container styles */
+#search-container {
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+/* Product highlight effect when clicked from search */
+.beer-card.highlight-product {
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.7);
+  transform: scale(1.03);
+  transition: all 0.4s ease;
+  z-index: 10;
+  position: relative;
+  animation: pulse 1.5s ease;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(76, 175, 80, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+
+/* Style adjustment for search results to match the app style */
+.search-bar button {
+  background-color: #4caf50;
+  border: 1px solid #3d8b40;
+}
+
+.search-bar button:hover {
+  background-color: #45a049;
+}
+
+.search-option.active {
+  background-color: #4caf50;
+  border: 1px solid #3d8b40;
 }

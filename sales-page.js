@@ -23,15 +23,15 @@ function elementsExist() {
 }
 
 // ✅ Function to get today's date in IST
-function getTodayIST() {
+export function getTodayIST() {
     const now = new Date();
-    const istOptions = { 
+    const istOptions = {
         timeZone: 'Asia/Kolkata',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
     };
-    
+
     const [day, month, year] = now.toLocaleString('en-GB', istOptions).split('/');
     return `${year}-${month}-${day}`; // YYYY-MM-DD format
 }
@@ -84,7 +84,7 @@ export async function loadSales() {
         snapshot.forEach((docSnap) => {
             const sale = docSnap.data();
             const saleDate = sale.date;
-            
+
             if (!dailyTotals[saleDate]) {
                 dailyTotals[saleDate] = 0;
             }
@@ -105,7 +105,12 @@ export async function loadSales() {
                 dateRow.className = "date-separator";
                 dateRow.innerHTML = `
                     <td colspan="6" style="text-align:center; font-weight:bold; background:#f3545a; color:white; padding:10px; border-top: 2px solid black;">
-                        📅 ${saleDate} - Total Sale: ₹${dailyTotals[saleDate].toFixed(2)}
+                        <div class="date-header">
+                            <span>📅 ${saleDate} - Total Sale: ₹${dailyTotals[saleDate].toFixed(2)}</span>
+                            <button class="download-day-btn" onclick="exportSalesToExcel('${saleDate}')">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                        </div>
                     </td>
                 `;
                 tableBody.appendChild(dateRow);
@@ -226,3 +231,4 @@ async function deleteSale(saleId) {
 // Make functions globally available
 window.deleteSale = deleteSale;
 window.renumberSales = renumberSales;
+window.getTodayIST = getTodayIST;
