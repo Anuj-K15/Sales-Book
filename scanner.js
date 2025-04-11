@@ -57,6 +57,9 @@ class BarcodeScanner {
         try {
             console.log("Processing scanned code:", scannedCode);
 
+            // Normalize the scanned code (trim whitespace and make consistent)
+            const normalizedCode = scannedCode.trim();
+
             // Detect if we're on the add-product page by checking the URL or callback type
             const isAddProductPage = window.location.pathname.includes('add-product') ||
                 (typeof onProductFound === 'function' && onProductFound.length === 1);
@@ -64,33 +67,96 @@ class BarcodeScanner {
             if (isAddProductPage) {
                 console.log("Add product page detected, returning barcode directly");
                 await this.stopScanner();
-                onProductFound(scannedCode);
+                onProductFound(normalizedCode);
                 return;
             }
 
             // For record page, search for the product
-            console.log("Record page detected, searching for product with barcode:", scannedCode);
-            const productsRef = collection(db, "products");
-            const q = query(productsRef, where("barcode", "==", scannedCode));
-            const snapshot = await getDocs(q);
+            console.log("Record page detected, searching for product with barcode:", normalizedCode);
 
-            if (!snapshot.empty) {
-                const product = {
-                    id: snapshot.docs[0].id,
-                    ...snapshot.docs[0].data()
-                };
-                console.log("Product found:", product);
-                await this.stopScanner();
-                onProductFound(product);
-            } else {
-                // Product not found
-                console.log("Product not found for barcode:", scannedCode);
-                showNotification("Product not found for barcode: " + scannedCode, "error");
+            try {
+                // First try exact match
+                let product = await this.findProductByBarcode(normalizedCode);
+
+                // If not found and the code contains JSON data (for QR codes with product info)
+                if (!product && normalizedCode.includes('{') && normalizedCode.includes('}')) {
+                    try {
+                        const productData = JSON.parse(normalizedCode);
+                        if (productData.barcode) {
+                            product = await this.findProductByBarcode(productData.barcode);
+                        }
+                        // If we have a name and price but no product found, create a temporary one
+                        if (!product && productData.name && productData.price) {
+                            console.log("Creating temporary product from QR data:", productData);
+                            product = {
+                                id: `temp_${Date.now()}`,
+                                name: productData.name,
+                                price: productData.price,
+                                barcode: productData.barcode || normalizedCode
+                            };
+                        }
+                    } catch (jsonError) {
+                        console.error("Error parsing QR JSON data:", jsonError);
+                    }
+                }
+
+                if (product) {
+                    console.log("Product found:", product);
+                    await this.stopScanner();
+                    onProductFound(product);
+                } else {
+                    // Product not found
+                    console.log("Product not found for barcode:", normalizedCode);
+                    showNotification("Product not found for barcode: " + normalizedCode, "error");
+                }
+            } catch (searchError) {
+                console.error("Error searching for product:", searchError);
+                showNotification("Error searching for product: " + searchError.message, "error");
             }
         } catch (err) {
             console.error("Error processing scan:", err);
             showNotification("Error processing scan: " + err.message, "error");
         }
+    }
+
+    // Helper method to find products by barcode
+    async findProductByBarcode(barcode) {
+        console.log("Searching for barcode:", barcode);
+
+        // Try to match the exact barcode
+        const productsRef = collection(db, "products");
+        const exactQuery = query(productsRef, where("barcode", "==", barcode));
+        let snapshot = await getDocs(exactQuery);
+
+        if (!snapshot.empty) {
+            return {
+                id: snapshot.docs[0].id,
+                ...snapshot.docs[0].data()
+            };
+        }
+
+        // If no exact match, get all products and do a manual comparison
+        // This handles case-insensitive matching and potential format differences
+        const allProductsQuery = query(productsRef);
+        snapshot = await getDocs(allProductsQuery);
+
+        const normalizedBarcode = barcode.toLowerCase().trim();
+
+        let matchedProduct = null;
+        snapshot.forEach((doc) => {
+            const product = doc.data();
+            const productBarcode = (product.barcode || "").toLowerCase().trim();
+
+            if (productBarcode === normalizedBarcode) {
+                matchedProduct = {
+                    id: doc.id,
+                    ...product
+                };
+                return true; // Break the loop
+            }
+        });
+
+        return matchedProduct;
     }
 }
 

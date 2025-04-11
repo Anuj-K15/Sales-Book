@@ -145,21 +145,13 @@
 
                     // Validate product
                     if (!product) {
-                        const notification = document.createElement('div');
-                        notification.className = 'notification error';
-                        notification.textContent = `Error: Invalid product scanned`;
-                        document.body.appendChild(notification);
-                        setTimeout(() => notification.remove(), 3000);
+                        showNotification('Error: Invalid product scanned', 'error');
                         return;
                     }
 
                     if (typeof product === 'string') {
                         // We got a barcode string instead of a product object
-                        const notification = document.createElement('div');
-                        notification.className = 'notification error';
-                        notification.textContent = `Error: Product not found for barcode: ${product}`;
-                        document.body.appendChild(notification);
-                        setTimeout(() => notification.remove(), 3000);
+                        showNotification(`Error: Product not found for barcode: ${product}`, 'error');
                         return;
                     }
 
@@ -169,28 +161,25 @@
                             window.addToCart(product.id, product.name, product.price, null, 1);
 
                             // Show notification
-                            const notification = document.createElement('div');
-                            notification.className = 'notification success';
-                            notification.textContent = `Added ${product.name} to cart`;
-                            document.body.appendChild(notification);
-                            setTimeout(() => notification.remove(), 3000);
+                            showNotification(`Added ${product.name} to cart`, 'success');
                         } catch (err) {
                             console.error("Error adding scanned product to cart:", err);
-                            const notification = document.createElement('div');
-                            notification.className = 'notification error';
-                            notification.textContent = `Error adding product to cart: ${err.message}`;
-                            document.body.appendChild(notification);
-                            setTimeout(() => notification.remove(), 3000);
+                            showNotification(`Error adding product to cart: ${err.message}`, 'error');
                         }
                     } else {
                         console.error("Invalid product data:", product);
-                        const notification = document.createElement('div');
-                        notification.className = 'notification error';
-                        notification.textContent = `Error: Invalid product data scanned`;
-                        document.body.appendChild(notification);
-                        setTimeout(() => notification.remove(), 3000);
+                        showNotification('Error: Invalid product data scanned', 'error');
                     }
                 };
+
+                // Helper function to show notifications
+                function showNotification(message, type) {
+                    const notification = document.createElement('div');
+                    notification.className = `notification ${type}`;
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 3000);
+                }
 
                 toggleScannerBtn.addEventListener('click', async () => {
                     console.log("Opening scanner...");
@@ -219,6 +208,25 @@
                     await barcodeScanner.stopScanner();
                     scannerContainer.style.display = 'none';
                 });
+
+                // For debugging - test if a barcode exists in the database
+                window.testBarcode = async function (barcode) {
+                    if (!barcode) {
+                        console.error("Please provide a barcode to test");
+                        return;
+                    }
+
+                    console.log("Testing barcode:", barcode);
+                    const product = await barcodeScanner.findProductByBarcode(barcode);
+
+                    if (product) {
+                        console.log("✅ Product found:", product);
+                        showNotification(`Product found: ${product.name} (₹${product.price})`, 'success');
+                    } else {
+                        console.log("❌ No product found for barcode:", barcode);
+                        showNotification(`No product found for barcode: ${barcode}`, 'error');
+                    }
+                };
 
             } catch (error) {
                 console.error("Error initializing:", error);

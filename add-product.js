@@ -143,7 +143,7 @@ form.addEventListener('submit', async (e) => {
         const product = {
             name,
             price,
-            barcode: barcode || generateRandomBarcode(),
+            barcode: barcode ? barcode.trim() : generateRandomBarcode(),
             image: base64Image,
             createdAt: new Date().toISOString()
         };
