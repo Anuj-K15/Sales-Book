@@ -13,7 +13,7 @@ class BarcodeScanner {
             if (this.isScanning) {
                 await this.stopScanner();
             }
-            
+
             this.html5QrcodeScanner = new Html5Qrcode(containerId);
             const config = {
                 fps: 10,
@@ -56,15 +56,20 @@ class BarcodeScanner {
     async handleScan(scannedCode, onProductFound) {
         try {
             console.log("Processing scanned code:", scannedCode);
-            
-            // For add-product page, just return the code
-            if (typeof onProductFound === 'function' && onProductFound.length === 1) {
+
+            // Detect if we're on the add-product page by checking the URL or callback type
+            const isAddProductPage = window.location.pathname.includes('add-product') ||
+                (typeof onProductFound === 'function' && onProductFound.length === 1);
+
+            if (isAddProductPage) {
+                console.log("Add product page detected, returning barcode directly");
                 await this.stopScanner();
                 onProductFound(scannedCode);
                 return;
             }
-            
+
             // For record page, search for the product
+            console.log("Record page detected, searching for product with barcode:", scannedCode);
             const productsRef = collection(db, "products");
             const q = query(productsRef, where("barcode", "==", scannedCode));
             const snapshot = await getDocs(q);
@@ -97,7 +102,7 @@ export function generateQRCode(data, elementId) {
         if (element) {
             element.innerHTML = '';
         }
-        
+
         const qr = new QRCode(element, {
             text: typeof data === 'string' ? data : JSON.stringify(data),
             width: 128,
@@ -116,15 +121,15 @@ export function generateQRCode(data, elementId) {
 // Notification helper
 function showNotification(message, type = 'info') {
     console.log(`Notification (${type}):`, message);
-    
+
     // Remove any existing notifications
     const existingNotifications = document.querySelectorAll('.notification');
     existingNotifications.forEach(notification => notification.remove());
-    
+
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
-    
+
     document.body.appendChild(notification);
 
     setTimeout(() => {

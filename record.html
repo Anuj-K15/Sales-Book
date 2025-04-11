@@ -141,14 +141,52 @@
 
                 // Define a global function to add scanned product to cart
                 window.handleScannedProduct = function (product) {
-                    console.log("Adding scanned product to cart:", product);
-                    if (product && product.id) {
-                        // Default quantity is 1 for scanned products
-                        window.addToCart(product.id, product.name, product.price, null, 1);
-                        // Show notification
+                    console.log("Handling scanned product:", product);
+
+                    // Validate product
+                    if (!product) {
                         const notification = document.createElement('div');
-                        notification.className = 'notification success';
-                        notification.textContent = `Added ${product.name} to cart`;
+                        notification.className = 'notification error';
+                        notification.textContent = `Error: Invalid product scanned`;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
+                        return;
+                    }
+
+                    if (typeof product === 'string') {
+                        // We got a barcode string instead of a product object
+                        const notification = document.createElement('div');
+                        notification.className = 'notification error';
+                        notification.textContent = `Error: Product not found for barcode: ${product}`;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
+                        return;
+                    }
+
+                    if (product && product.id && product.name && product.price) {
+                        try {
+                            // Default quantity is 1 for scanned products
+                            window.addToCart(product.id, product.name, product.price, null, 1);
+
+                            // Show notification
+                            const notification = document.createElement('div');
+                            notification.className = 'notification success';
+                            notification.textContent = `Added ${product.name} to cart`;
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 3000);
+                        } catch (err) {
+                            console.error("Error adding scanned product to cart:", err);
+                            const notification = document.createElement('div');
+                            notification.className = 'notification error';
+                            notification.textContent = `Error adding product to cart: ${err.message}`;
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 3000);
+                        }
+                    } else {
+                        console.error("Invalid product data:", product);
+                        const notification = document.createElement('div');
+                        notification.className = 'notification error';
+                        notification.textContent = `Error: Invalid product data scanned`;
                         document.body.appendChild(notification);
                         setTimeout(() => notification.remove(), 3000);
                     }
