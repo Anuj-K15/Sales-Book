@@ -49,6 +49,12 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="initial-stock">Initial Stock</label>
+                    <input type="number" id="initial-stock" min="0" value="0">
+                    <small class="form-hint">Enter the starting inventory quantity</small>
+                </div>
+
+                <div class="form-group">
                     <label for="product-barcode">Barcode/QR Code</label>
                     <div class="barcode-input-group">
                         <input type="text" id="product-barcode" placeholder="Scan or enter barcode">
@@ -59,6 +65,7 @@
                             <i class="fas fa-qrcode"></i> Generate
                         </button>
                     </div>
+                    <small class="form-hint">Scan an existing barcode or generate a unique QR code</small>
                 </div>
 
                 <div class="form-group">
@@ -70,6 +77,8 @@
                 <div id="qrcode-container" class="qr-code-container" style="display: none;">
                     <h3>Product QR Code</h3>
                     <div id="qrcode"></div>
+                    <p class="qr-info">This QR code contains the product information and can be used for quick scanning.
+                    </p>
                     <button type="button" id="download-qr" class="download-btn" style="display: none;">
                         <i class="fas fa-download"></i> Download QR Code
                     </button>
@@ -81,15 +90,26 @@
 
         <!-- Scanner Modal -->
         <div id="scanner-container" class="scanner-container" style="display: none;">
+            <h3>Scan Barcode/QR Code</h3>
+            <p class="scanner-instructions">Position the barcode or QR code within the camera view</p>
             <div id="reader"></div>
-            <button id="close-scanner" class="close-scanner-btn">
-                <i class="fas fa-times"></i> Close Scanner
-            </button>
+            <div class="scanner-controls">
+                <button id="close-scanner" class="close-scanner-btn">
+                    <i class="fas fa-times"></i> Close Scanner
+                </button>
+                <button id="switch-camera" class="switch-camera-btn">
+                    <i class="fas fa-sync"></i> Switch Camera
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- Notifications container -->
+    <div id="notifications-container"></div>
+
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="scanner.js"></script>
     <script type="module" src="add-product.js"></script>
