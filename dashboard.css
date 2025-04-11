@@ -383,6 +383,13 @@ tr:hover {
     padding: 15px;
   }
 
+  .navigation-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
   .metrics-grid {
     grid-template-columns: 1fr;
   }
@@ -415,3 +422,4 @@ tr:hover {
     margin-bottom: 5px;
   }
 }
+
