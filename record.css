@@ -141,6 +141,7 @@ h1 {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   line-height: 1.2;
 }
@@ -307,6 +308,89 @@ h1 {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
+/* Scanner Button Styles */
+.scanner-btn {
+  background: #ffcc00;
+  color: #000;
+  border: 1px solid #e0b000;
+  padding: 10px 15px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  margin: 15px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.scanner-btn i {
+  font-size: 1.1rem;
+}
+
+.scanner-btn:hover {
+  background: #e0b000;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.scanner-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Scanner Container Styles */
+.scanner-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+}
+
+#reader {
+  width: 100% !important;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.close-scanner-btn {
+  background: #e63946;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.close-scanner-btn:hover {
+  background: #c1121f;
+  transform: translateY(-2px);
+}
+
+.close-scanner-btn:active {
+  transform: translateY(1px);
+}
+
 /* Product image container */
 .product-image-container {
   width: 100%;
@@ -439,6 +523,10 @@ h1 {
   .beer-card {
     padding: 10px;
   }
+
+  .scanner-container {
+    width: 95%;
+  }
 }
 
 /* Responsive Design - Small Mobile (below 576px) */
@@ -538,6 +626,21 @@ h1 {
     padding: 12px 15px;
     font-size: 0.9rem;
     margin-top: 10px;
+  }
+
+  .scanner-btn {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+  }
+
+  .scanner-container {
+    width: 95%;
+    padding: 15px;
+  }
+
+  .close-scanner-btn {
+    font-size: 0.8rem;
+    padding: 8px 12px;
   }
 }
 

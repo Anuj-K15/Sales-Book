@@ -9,11 +9,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- Add search bar component CSS -->
     <link rel="stylesheet" href="search-bar.css">
+    <!-- Add scanner CSS -->
+    <link rel="stylesheet" href="scanner.css">
+    <!-- Add html5-qrcode library -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Add QR Code generation library -->
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
 </head>
 
 <body>
     <div class="container">
         <div class="navigation-buttons">
+            <button onclick="window.location.href='dashboard.html'" class="nav-btn">
+                <i class="fas fa-home"></i> Dashboard
+            </button>
             <button onclick="window.location.href='add-product.html'" class="nav-btn">
                 <i class="fas fa-plus"></i> Add Product
             </button>
@@ -31,6 +40,11 @@
 
         <!-- Add search bar component -->
         <div id="search-container"></div>
+
+        <!-- Scanner Button -->
+        <button id="toggle-scanner" class="scanner-btn">
+            <i class="fas fa-barcode"></i> Scan Barcode/QR
+        </button>
 
         <div class="beer-list" id="beer-list">
             <div class="loading-message">Loading products...</div>
@@ -54,19 +68,28 @@
         </div>
     </div>
 
+    <!-- Scanner Modal (outside container to prevent CSS conflicts) -->
+    <div id="scanner-container" class="scanner-container" style="display: none;">
+        <div id="reader"></div>
+        <button id="close-scanner" class="close-scanner-btn">
+            <i class="fas fa-times"></i> Close Scanner
+        </button>
+    </div>
+
     <!-- Load Firebase Configuration and Scripts Using ES Modules -->
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="script.js"></script>
-    
+    <script type="module" src="scanner.js"></script>
+
     <!-- Add search bar component script -->
     <script src="search-bar.js"></script>
     <!-- Initialize search bar with products data -->
     <script type="module">
         import { db } from "./firebase-config.js";
         import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { barcodeScanner } from "./scanner.js";
 
-        // Initialize search bar after DOM is loaded
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async function () {
             try {
                 // Fetch products from Firestore
                 const productsRef = collection(db, "products");
@@ -86,14 +109,13 @@
                     searchFields: ['name'],
                     placeholder: 'Search for beers...',
                     filterOptions: [
-                        {label: 'All', value: 'all'},
-                        {label: 'In Stock', value: 'in-stock'},
-                        {label: 'Out of Stock', value: 'out-of-stock'}
+                        { label: 'All', value: 'all' },
+                        { label: 'In Stock', value: 'in-stock' },
+                        { label: 'Out of Stock', value: 'out-of-stock' }
                     ],
-                    debounceTime: 300, // Wait 300ms after typing stops before searching
-                    minChars: 2, // Start searching after 2 characters
+                    debounceTime: 300,
+                    minChars: 2,
                     onResultClick: (item) => {
-                        // Scroll to and highlight the selected product
                         const productElement = document.querySelector(`.beer-card[data-id="${item.id}"]`);
                         if (productElement) {
                             productElement.scrollIntoView({ behavior: 'smooth' });
@@ -104,8 +126,33 @@
                         }
                     }
                 });
+
+                // Initialize scanner buttons
+                const toggleScannerBtn = document.getElementById('toggle-scanner');
+                const closeScannerBtn = document.getElementById('close-scanner');
+                const scannerContainer = document.getElementById('scanner-container');
+
+                toggleScannerBtn.addEventListener('click', async () => {
+                    scannerContainer.style.display = 'block';
+                    try {
+                        await barcodeScanner.initializeScanner('reader', (product) => {
+                            // Handle scanned product (add to cart)
+                            addToCart(product);
+                            scannerContainer.style.display = 'none';
+                        });
+                    } catch (err) {
+                        console.error('Failed to start scanner:', err);
+                        scannerContainer.style.display = 'none';
+                    }
+                });
+
+                closeScannerBtn.addEventListener('click', async () => {
+                    await barcodeScanner.stopScanner();
+                    scannerContainer.style.display = 'none';
+                });
+
             } catch (error) {
-                console.error("Error initializing search:", error);
+                console.error("Error initializing:", error);
             }
         });
     </script>

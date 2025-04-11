@@ -6,12 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BeerZone - Add Product</title>
     <link rel="stylesheet" href="add-product.css">
+    <link rel="stylesheet" href="scanner.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Add QR Code generation library -->
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <!-- Add html5-qrcode library -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 
 <body>
     <div class="container">
         <div class="navigation-buttons">
+            <button onclick="window.location.href='dashboard.html'" class="nav-btn">
+                <i class="fas fa-home"></i> Dashboard
+            </button>
             <button onclick="window.location.href='record.html'" class="nav-btn">
                 <i class="fas fa-receipt"></i> Record Sales
             </button>
@@ -41,19 +49,49 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="product-barcode">Barcode/QR Code</label>
+                    <div class="barcode-input-group">
+                        <input type="text" id="product-barcode" placeholder="Scan or enter barcode">
+                        <button type="button" id="scan-barcode" class="scan-btn">
+                            <i class="fas fa-barcode"></i> Scan
+                        </button>
+                        <button type="button" id="generate-barcode" class="generate-btn">
+                            <i class="fas fa-qrcode"></i> Generate
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label for="product-image">Product Image</label>
                     <input type="file" id="product-image" accept="image/*" required>
+                </div>
+
+                <!-- QR Code Display Area -->
+                <div id="qrcode-container" class="qr-code-container" style="display: none;">
+                    <h3>Product QR Code</h3>
+                    <div id="qrcode"></div>
+                    <button type="button" id="download-qr" class="download-btn" style="display: none;">
+                        <i class="fas fa-download"></i> Download QR Code
+                    </button>
                 </div>
 
                 <button type="submit" class="record-btn">Add Product</button>
             </form>
         </div>
+
+        <!-- Scanner Modal -->
+        <div id="scanner-container" class="scanner-container" style="display: none;">
+            <div id="reader"></div>
+            <button id="close-scanner" class="close-scanner-btn">
+                <i class="fas fa-times"></i> Close Scanner
+            </button>
+        </div>
     </div>
+
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-    <!-- Load Firebase config after Firebase is defined -->
     <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="scanner.js"></script>
     <script type="module" src="add-product.js"></script>
 </body>
 

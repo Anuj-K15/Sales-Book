@@ -268,3 +268,120 @@ h1 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
+
+/* Add these new styles after your existing styles */
+
+/* Barcode Input Group */
+.barcode-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.barcode-input-group input {
+  flex: 1;
+}
+
+.scan-btn,
+.generate-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+}
+
+.scan-btn:hover,
+.generate-btn:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.scan-btn:active,
+.generate-btn:active {
+  transform: translateY(1px);
+}
+
+/* QR Code Container */
+.qr-code-container {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  background: #f9f9f9;
+}
+
+.qr-code-container h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+#qrcode {
+  display: inline-block;
+  padding: 10px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.download-btn {
+  margin-top: 15px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.download-btn:hover {
+  background: #1976d2;
+  transform: translateY(-2px);
+}
+
+.download-btn:active {
+  transform: translateY(1px);
+}
+
+/* Responsive Design for Barcode Elements */
+@media (max-width: 576px) {
+  .barcode-input-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .barcode-input-group input {
+    width: 100%;
+  }
+
+  .scan-btn,
+  .generate-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .qr-code-container {
+    padding: 15px;
+  }
+
+  #qrcode {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .download-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
