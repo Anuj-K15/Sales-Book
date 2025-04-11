@@ -171,14 +171,23 @@ async function getInventoryData(productIds) {
 document.addEventListener("DOMContentLoaded", loadProducts);
 
 // ✅ Function to add products to the cart
-window.addToCart = function (productId, name, price, buttonElement) {
-    const beerCard = buttonElement.closest(".beer-card"); // ✅ Get parent card
-    const quantityInput = beerCard.querySelector(".quantity"); // ✅ Find the input field
-    const quantity = parseInt(quantityInput.value); // ✅ Get selected quantity
+window.addToCart = function (productId, name, price, buttonElement, scannedQuantity) {
+    let quantity = 1; // Default quantity
 
-    if (isNaN(quantity) || quantity <= 0) {
-        alert("❌ Please enter a valid quantity!");
-        return;
+    if (scannedQuantity) {
+        // For scanned product, use provided quantity
+        quantity = scannedQuantity;
+        console.log(`Using scanned quantity: ${quantity} for product: ${name}`);
+    } else if (buttonElement) {
+        // For button click, get quantity from the input field
+        const beerCard = buttonElement.closest(".beer-card");
+        const quantityInput = beerCard.querySelector(".quantity");
+        quantity = parseInt(quantityInput.value);
+
+        if (isNaN(quantity) || quantity <= 0) {
+            alert("❌ Please enter a valid quantity!");
+            return;
+        }
     }
 
     const item = {
@@ -196,14 +205,18 @@ window.addToCart = function (productId, name, price, buttonElement) {
     updateCart();
 
     // Visual feedback for the user
-    buttonElement.textContent = "Added!";
-    buttonElement.style.backgroundColor = "#4CAF50";
+    if (buttonElement) {
+        buttonElement.textContent = "Added!";
+        buttonElement.style.backgroundColor = "#4CAF50";
 
-    // Reset button text after a brief delay
-    setTimeout(() => {
-        buttonElement.textContent = "Add to Cart";
-        buttonElement.style.backgroundColor = "";
-    }, 1000);
+        // Reset button text after a brief delay
+        setTimeout(() => {
+            buttonElement.textContent = "Add to Cart";
+            buttonElement.style.backgroundColor = "";
+        }, 1000);
+    }
+
+    return true; // Successfully added
 };
 
 

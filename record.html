@@ -10,7 +10,7 @@
     <!-- Add search bar component CSS -->
     <link rel="stylesheet" href="search-bar.css">
     <!-- Add scanner CSS -->
-    <!-- <link rel="stylesheet" href="scanner.css"> -->
+    <link rel="stylesheet" href="scanner.css">
     <!-- Add html5-qrcode library -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     <!-- Add QR Code generation library -->
@@ -91,6 +91,8 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             try {
+                console.log("Initializing barcode scanning functionality...");
+
                 // Fetch products from Firestore
                 const productsRef = collection(db, "products");
                 const snapshot = await getDocs(productsRef);
@@ -132,27 +134,62 @@
                 const closeScannerBtn = document.getElementById('close-scanner');
                 const scannerContainer = document.getElementById('scanner-container');
 
+                if (!toggleScannerBtn || !closeScannerBtn || !scannerContainer) {
+                    console.error("Scanner elements not found in the DOM");
+                    return;
+                }
+
+                // Define a global function to add scanned product to cart
+                window.handleScannedProduct = function (product) {
+                    console.log("Adding scanned product to cart:", product);
+                    if (product && product.id) {
+                        // Default quantity is 1 for scanned products
+                        window.addToCart(product.id, product.name, product.price, null, 1);
+                        // Show notification
+                        const notification = document.createElement('div');
+                        notification.className = 'notification success';
+                        notification.textContent = `Added ${product.name} to cart`;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
+                    }
+                };
+
                 toggleScannerBtn.addEventListener('click', async () => {
+                    console.log("Opening scanner...");
                     scannerContainer.style.display = 'block';
                     try {
                         await barcodeScanner.initializeScanner('reader', (product) => {
+                            console.log("Product scanned:", product);
                             // Handle scanned product (add to cart)
-                            addToCart(product);
+                            window.handleScannedProduct(product);
                             scannerContainer.style.display = 'none';
                         });
                     } catch (err) {
                         console.error('Failed to start scanner:', err);
                         scannerContainer.style.display = 'none';
+
+                        const notification = document.createElement('div');
+                        notification.className = 'notification error';
+                        notification.textContent = 'Failed to start scanner: ' + err.message;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
                     }
                 });
 
                 closeScannerBtn.addEventListener('click', async () => {
+                    console.log("Closing scanner...");
                     await barcodeScanner.stopScanner();
                     scannerContainer.style.display = 'none';
                 });
 
             } catch (error) {
                 console.error("Error initializing:", error);
+
+                const notification = document.createElement('div');
+                notification.className = 'notification error';
+                notification.textContent = 'Error initializing: ' + error.message;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
             }
         });
     </script>

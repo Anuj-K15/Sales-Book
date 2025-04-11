@@ -26,55 +26,87 @@ const downloadQRButton = document.getElementById('download-qr');
 let currentQRCode = null;
 
 // Initialize scanner functionality
-scanButton.addEventListener('click', async () => {
+scanButton.addEventListener('click', async (e) => {
+    e.preventDefault(); // Prevent form submission
+    console.log("Scan button clicked");
     scannerContainer.style.display = 'block';
+
     try {
-        await barcodeScanner.initializeScanner('reader', (result) => {
-            barcodeInput.value = result;
+        await barcodeScanner.initializeScanner('reader', (scannedBarcode) => {
+            console.log("Barcode scanned:", scannedBarcode);
+            barcodeInput.value = scannedBarcode;
             scannerContainer.style.display = 'none';
+            showNotification("Barcode scanned successfully!", "success");
         });
     } catch (err) {
         console.error('Failed to start scanner:', err);
         scannerContainer.style.display = 'none';
+        showNotification("Failed to start scanner. Please try again.", "error");
     }
 });
 
-closeScanner.addEventListener('click', async () => {
+closeScanner.addEventListener('click', async (e) => {
+    e.preventDefault(); // Prevent form submission
     await barcodeScanner.stopScanner();
     scannerContainer.style.display = 'none';
 });
 
 // Generate QR code for product
-generateButton.addEventListener('click', () => {
-    const productData = {
-        name: nameInput.value,
-        price: parseFloat(priceInput.value) || 0,
-        barcode: barcodeInput.value
-    };
+generateButton.addEventListener('click', (e) => {
+    e.preventDefault(); // Prevent form submission
 
-    if (!productData.name || !productData.price) {
-        alert('Please fill in product name and price first');
+    const productName = nameInput.value.trim();
+    const productPrice = parseFloat(priceInput.value) || 0;
+
+    if (!productName) {
+        showNotification('Please enter a product name', 'error');
         return;
     }
 
-    // Clear previous QR code
-    const qrcodeElement = document.getElementById('qrcode');
-    qrcodeElement.innerHTML = '';
+    if (productPrice <= 0) {
+        showNotification('Please enter a valid price', 'error');
+        return;
+    }
+
+    // Generate random barcode if not provided
+    if (!barcodeInput.value) {
+        barcodeInput.value = generateRandomBarcode();
+    }
+
+    const productData = {
+        name: productName,
+        price: productPrice,
+        barcode: barcodeInput.value
+    };
 
     // Generate new QR code
-    currentQRCode = generateQRCode(productData, 'qrcode');
-    qrcodeContainer.style.display = 'block';
-    downloadQRButton.style.display = 'inline-flex';
+    try {
+        console.log("Generating QR code for:", productData);
+        currentQRCode = generateQRCode(productData, 'qrcode');
+        qrcodeContainer.style.display = 'block';
+        downloadQRButton.style.display = 'inline-block';
+        showNotification('QR code generated successfully!', 'success');
+    } catch (error) {
+        console.error("Error generating QR code:", error);
+        showNotification('Error generating QR code', 'error');
+    }
 });
 
 // Download QR code
-downloadQRButton.addEventListener('click', () => {
+downloadQRButton.addEventListener('click', (e) => {
+    e.preventDefault(); // Prevent form submission
+
     const canvas = document.querySelector('#qrcode canvas');
     if (canvas) {
         const link = document.createElement('a');
-        link.download = `qr-${barcodeInput.value || 'product'}.png`;
-        link.href = canvas.toDataURL();
+        link.download = `qrcode-${nameInput.value.replace(/\s+/g, '-')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        showNotification('QR code downloaded!', 'success');
+    } else {
+        showNotification('No QR code to download', 'error');
     }
 });
 
@@ -84,13 +116,23 @@ form.addEventListener('submit', async (e) => {
 
     try {
         // Get form values
-        const name = nameInput.value;
+        const name = nameInput.value.trim();
         const price = parseFloat(priceInput.value);
-        const barcode = barcodeInput.value;
+        const barcode = barcodeInput.value.trim();
         const imageFile = imageInput.files[0];
 
-        if (!name || !price || !imageFile) {
-            alert('Please fill in all required fields');
+        if (!name) {
+            showNotification('Please enter a product name', 'error');
+            return;
+        }
+
+        if (!price || price <= 0) {
+            showNotification('Please enter a valid price', 'error');
+            return;
+        }
+
+        if (!imageFile) {
+            showNotification('Please select a product image', 'error');
             return;
         }
 
@@ -122,7 +164,7 @@ form.addEventListener('submit', async (e) => {
 
     } catch (error) {
         console.error("Error adding product:", error);
-        showNotification('Error adding product. Please try again.', 'error');
+        showNotification('Error adding product: ' + error.message, 'error');
     }
 });
 
@@ -143,9 +185,16 @@ function generateRandomBarcode() {
 
 // Show notification
 function showNotification(message, type = 'info') {
+    console.log(`Notification (${type}):`, message);
+
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
+
     document.body.appendChild(notification);
 
     setTimeout(() => {

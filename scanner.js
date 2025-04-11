@@ -10,6 +10,10 @@ class BarcodeScanner {
 
     async initializeScanner(containerId, onProductFound) {
         try {
+            if (this.isScanning) {
+                await this.stopScanner();
+            }
+            
             this.html5QrcodeScanner = new Html5Qrcode(containerId);
             const config = {
                 fps: 10,
@@ -17,14 +21,17 @@ class BarcodeScanner {
                 aspectRatio: 1.0
             };
 
+            console.log("Starting scanner...");
             await this.html5QrcodeScanner.start(
                 { facingMode: "environment" },
                 config,
                 async (decodedText) => {
+                    console.log("Scanned code:", decodedText);
                     await this.handleScan(decodedText, onProductFound);
                 },
                 (errorMessage) => {
                     // Handle scan error silently
+                    console.log("Scanner error (non-fatal):", errorMessage);
                 }
             );
             this.isScanning = true;
@@ -39,6 +46,7 @@ class BarcodeScanner {
             try {
                 await this.html5QrcodeScanner.stop();
                 this.isScanning = false;
+                console.log("Scanner stopped");
             } catch (err) {
                 console.error("Error stopping scanner:", err);
             }
@@ -47,7 +55,16 @@ class BarcodeScanner {
 
     async handleScan(scannedCode, onProductFound) {
         try {
-            // Search for product in Firestore
+            console.log("Processing scanned code:", scannedCode);
+            
+            // For add-product page, just return the code
+            if (typeof onProductFound === 'function' && onProductFound.length === 1) {
+                await this.stopScanner();
+                onProductFound(scannedCode);
+                return;
+            }
+            
+            // For record page, search for the product
             const productsRef = collection(db, "products");
             const q = query(productsRef, where("barcode", "==", scannedCode));
             const snapshot = await getDocs(q);
@@ -57,15 +74,17 @@ class BarcodeScanner {
                     id: snapshot.docs[0].id,
                     ...snapshot.docs[0].data()
                 };
+                console.log("Product found:", product);
                 await this.stopScanner();
                 onProductFound(product);
             } else {
                 // Product not found
-                showNotification("Product not found", "error");
+                console.log("Product not found for barcode:", scannedCode);
+                showNotification("Product not found for barcode: " + scannedCode, "error");
             }
         } catch (err) {
             console.error("Error processing scan:", err);
-            showNotification("Error processing scan", "error");
+            showNotification("Error processing scan: " + err.message, "error");
         }
     }
 }
@@ -73,8 +92,14 @@ class BarcodeScanner {
 // QR Code generation functionality
 export function generateQRCode(data, elementId) {
     try {
-        const qr = new QRCode(document.getElementById(elementId), {
-            text: JSON.stringify(data),
+        // Clear any existing QR code
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = '';
+        }
+        
+        const qr = new QRCode(element, {
+            text: typeof data === 'string' ? data : JSON.stringify(data),
             width: 128,
             height: 128,
             colorDark: "#000000",
@@ -90,9 +115,16 @@ export function generateQRCode(data, elementId) {
 
 // Notification helper
 function showNotification(message, type = 'info') {
+    console.log(`Notification (${type}):`, message);
+    
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+    
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
+    
     document.body.appendChild(notification);
 
     setTimeout(() => {
@@ -100,4 +132,5 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
+// Create a single instance
 export const barcodeScanner = new BarcodeScanner(); 
