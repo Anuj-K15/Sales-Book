@@ -686,16 +686,3 @@ h1 {
   background-color: #4caf50;
   border: 1px solid #3d8b40;
 }
-
-.scanner-section {
-  text-align: center;
-  margin: 0 auto 20px auto;
-  max-width: 400px;
-}
-
-.scanner-help {
-  display: block;
-  color: #666;
-  font-size: 0.8rem;
-  margin-top: 5px;
-}

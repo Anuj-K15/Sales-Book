@@ -41,13 +41,10 @@
         <!-- Add search bar component -->
         <div id="search-container"></div>
 
-        <div class="scanner-section">
-            <!-- Scanner Button -->
-            <button id="toggle-scanner" class="scanner-btn">
-                <i class="fas fa-barcode"></i> Scan Barcode/QR
-            </button>
-            <small class="scanner-help">Quickly add products by scanning barcodes or QR codes</small>
-        </div>
+        <!-- Scanner Button -->
+        <button id="toggle-scanner" class="scanner-btn">
+            <i class="fas fa-barcode"></i> Scan Barcode/QR
+        </button>
 
         <div class="beer-list" id="beer-list">
             <div class="loading-message">Loading products...</div>
@@ -73,21 +70,11 @@
 
     <!-- Scanner Modal (outside container to prevent CSS conflicts) -->
     <div id="scanner-container" class="scanner-container" style="display: none;">
-        <h3>Scan Product</h3>
-        <p class="scanner-instructions">Position the barcode or QR code within the camera view</p>
         <div id="reader"></div>
-        <div class="scanner-controls">
-            <button id="close-scanner" class="close-scanner-btn">
-                <i class="fas fa-times"></i> Close Scanner
-            </button>
-            <button id="switch-camera" class="switch-camera-btn">
-                <i class="fas fa-sync"></i> Switch Camera
-            </button>
-        </div>
+        <button id="close-scanner" class="close-scanner-btn">
+            <i class="fas fa-times"></i> Close Scanner
+        </button>
     </div>
-
-    <!-- Notifications container -->
-    <div id="notifications-container"></div>
 
     <!-- Load Firebase Configuration and Scripts Using ES Modules -->
     <script type="module" src="firebase-config.js"></script>
@@ -145,30 +132,34 @@
                 // Initialize scanner buttons
                 const toggleScannerBtn = document.getElementById('toggle-scanner');
                 const closeScannerBtn = document.getElementById('close-scanner');
-                const switchCameraBtn = document.getElementById('switch-camera');
                 const scannerContainer = document.getElementById('scanner-container');
 
-                if (!toggleScannerBtn || !closeScannerBtn || !scannerContainer || !switchCameraBtn) {
+                if (!toggleScannerBtn || !closeScannerBtn || !scannerContainer) {
                     console.error("Scanner elements not found in the DOM");
                     return;
                 }
 
-                // Track current camera
-                let currentCamera = 'environment'; // Default to rear camera
-
-                // Function to handle a scanned product
-                function handleScannedProduct(product) {
+                // Define a global function to add scanned product to cart
+                window.handleScannedProduct = function (product) {
                     console.log("Handling scanned product:", product);
 
                     // Validate product
                     if (!product) {
-                        barcodeScanner.showNotification('Error: Invalid product scanned', 'error');
+                        const notification = document.createElement('div');
+                        notification.className = 'notification error';
+                        notification.textContent = `Error: Invalid product scanned`;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
                         return;
                     }
 
                     if (typeof product === 'string') {
                         // We got a barcode string instead of a product object
-                        barcodeScanner.showNotification(`Product not found for barcode: ${product}`, 'error');
+                        const notification = document.createElement('div');
+                        notification.className = 'notification error';
+                        notification.textContent = `Error: Product not found for barcode: ${product}`;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
                         return;
                     }
 
@@ -178,52 +169,48 @@
                             window.addToCart(product.id, product.name, product.price, null, 1);
 
                             // Show notification
-                            barcodeScanner.showNotification(`Added ${product.name} to cart`, 'success');
-
-                            // Close scanner automatically after successful scan
-                            scannerContainer.style.display = 'none';
-                            barcodeScanner.stopScanner();
+                            const notification = document.createElement('div');
+                            notification.className = 'notification success';
+                            notification.textContent = `Added ${product.name} to cart`;
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 3000);
                         } catch (err) {
                             console.error("Error adding scanned product to cart:", err);
-                            barcodeScanner.showNotification(`Error adding product to cart: ${err.message}`, 'error');
+                            const notification = document.createElement('div');
+                            notification.className = 'notification error';
+                            notification.textContent = `Error adding product to cart: ${err.message}`;
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 3000);
                         }
                     } else {
                         console.error("Invalid product data:", product);
-                        barcodeScanner.showNotification(`Error: Invalid product data scanned`, 'error');
+                        const notification = document.createElement('div');
+                        notification.className = 'notification error';
+                        notification.textContent = `Error: Invalid product data scanned`;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
                     }
-                }
-
-                // Switch camera function
-                switchCameraBtn.addEventListener('click', async () => {
-                    try {
-                        // Stop current scanner
-                        await barcodeScanner.stopScanner();
-
-                        // Toggle camera
-                        currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-
-                        // Restart scanner with new camera
-                        await barcodeScanner.initializeScanner('reader', handleScannedProduct, {
-                            facingMode: currentCamera
-                        });
-
-                        // Update button text
-                        switchCameraBtn.innerHTML = `<i class="fas fa-sync"></i> ${currentCamera === 'environment' ? 'Front Camera' : 'Back Camera'}`;
-                    } catch (err) {
-                        console.error('Failed to switch camera:', err);
-                        barcodeScanner.showNotification('Failed to switch camera: ' + err.message, 'error');
-                    }
-                });
+                };
 
                 toggleScannerBtn.addEventListener('click', async () => {
                     console.log("Opening scanner...");
                     scannerContainer.style.display = 'block';
                     try {
-                        await barcodeScanner.initializeScanner('reader', handleScannedProduct);
+                        await barcodeScanner.initializeScanner('reader', (product) => {
+                            console.log("Product scanned:", product);
+                            // Handle scanned product (add to cart)
+                            window.handleScannedProduct(product);
+                            scannerContainer.style.display = 'none';
+                        });
                     } catch (err) {
                         console.error('Failed to start scanner:', err);
                         scannerContainer.style.display = 'none';
-                        barcodeScanner.showNotification('Failed to start scanner: ' + err.message, 'error');
+
+                        const notification = document.createElement('div');
+                        notification.className = 'notification error';
+                        notification.textContent = 'Failed to start scanner: ' + err.message;
+                        document.body.appendChild(notification);
+                        setTimeout(() => notification.remove(), 3000);
                     }
                 });
 
@@ -235,6 +222,7 @@
 
             } catch (error) {
                 console.error("Error initializing:", error);
+
                 const notification = document.createElement('div');
                 notification.className = 'notification error';
                 notification.textContent = 'Error initializing: ' + error.message;
