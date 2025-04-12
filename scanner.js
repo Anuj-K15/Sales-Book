@@ -26,80 +26,69 @@ class BarcodeScanner {
                 readerElement.removeChild(readerElement.firstChild);
             }
 
-            // Create scanner with mobile-optimized settings
-            console.log("Creating Html5Qrcode instance for container:", containerId);
+            // Log more information about the environment
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            console.log(`📱 Device: ${isMobile ? 'Mobile' : 'Desktop'}, UserAgent: ${navigator.userAgent}`);
 
-            // First, add a loading indicator
+            // Add a loading spinner
             const loadingDiv = document.createElement('div');
             loadingDiv.className = 'scanner-loading';
-            loadingDiv.innerHTML = '<div>Activating camera...</div>';
+            loadingDiv.innerHTML = 'Initializing camera...';
             readerElement.appendChild(loadingDiv);
 
-            // Create new scanner instance
+            // Give the browser a moment to render the container
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // Create scanner with better mobile-optimized settings
             this.html5QrcodeScanner = new Html5Qrcode(containerId);
 
-            // Check if we're on a mobile device
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            console.log("Device detection:", isMobile ? "Mobile device" : "Desktop device");
+            // Check and log available camera devices
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                console.log(`📷 Available cameras: ${devices.length}`, devices);
+            } catch (cameraError) {
+                console.warn("Could not enumerate cameras", cameraError);
+            }
 
-            // Configure camera options - use back camera on mobile
-            const cameraConfig = {
-                facingMode: "environment"
-            };
-
-            // Scanner configuration
+            // Define better scanning configuration for mobile
             const config = {
-                fps: isMobile ? 10 : 15,
-                qrbox: isMobile ? { width: 200, height: 200 } : { width: 300, height: 300 },
+                fps: isMobile ? 10 : 10, // Higher FPS for better scanning
+                qrbox: isMobile ? { width: 250, height: 250 } : { width: 300, height: 300 },
                 aspectRatio: 1.0,
-                disableFlip: false,
                 formatsToSupport: [
                     Html5QrcodeSupportedFormats.QR_CODE,
                     Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
                     Html5QrcodeSupportedFormats.CODE_39,
-                    Html5QrcodeSupportedFormats.CODE_128
-                ]
+                    Html5QrcodeSupportedFormats.CODE_93,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.ITF,
+                    Html5QrcodeSupportedFormats.UPC_A,
+                    Html5QrcodeSupportedFormats.UPC_E
+                ],
+                disableFlip: false,
+                rememberLastUsedCamera: true
             };
 
-            console.log(`Starting scanner with config:`, config);
-            console.log(`Camera options:`, cameraConfig);
+            console.log(`Starting scanner on ${isMobile ? 'mobile' : 'desktop'} device with config:`, config);
 
             // Make onProductFound globally accessible for this scan session
             window._barcodeProductCallback = onProductFound;
 
-            // Request camera permission explicitly on mobile
-            if (isMobile) {
-                try {
-                    console.log("Requesting camera permission on mobile...");
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: "environment" }
-                    });
+            // For mobile, create a more reliable camera config
+            const cameraConfig = {
+                facingMode: "environment" // Use back camera on mobile
+            };
 
-                    // Stop the stream immediately, just checking for permission
-                    stream.getTracks().forEach(track => track.stop());
-                    console.log("✅ Camera permission granted");
-                } catch (permError) {
-                    console.error("❌ Camera permission denied:", permError);
-                    window.showNotification?.("Camera permission required for scanning", "error");
-                    throw new Error("Camera permission denied");
-                }
-            }
-
-            // Start the scanner with a small delay to ensure DOM is updated
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            // Remove loading indicator
-            if (loadingDiv.parentNode) {
-                loadingDiv.parentNode.removeChild(loadingDiv);
-            }
-
-            console.log("Starting scanner now...");
-
+            // Start the scanner with improved error handling
             await this.html5QrcodeScanner.start(
                 cameraConfig,
                 config,
                 async (decodedText) => {
-                    console.log("Scanned code:", decodedText);
+                    console.log("✅ Scanned code:", decodedText);
+
+                    // Show feedback to user
+                    window.showNotification?.(`Barcode detected: ${decodedText}`, "info");
 
                     // Prevent duplicate scans or too frequent scans
                     if (this.scanCooldown || decodedText === this.lastScannedCode) {
@@ -110,11 +99,18 @@ class BarcodeScanner {
                     this.lastScannedCode = decodedText;
                     this.scanCooldown = true;
 
-                    // Show scanning notification
-                    window.showNotification?.("Code detected! Processing...", "info");
+                    // Remove loading indicator if it exists
+                    const loadingElement = readerElement.querySelector('.scanner-loading');
+                    if (loadingElement) {
+                        loadingElement.remove();
+                    }
 
                     // Process the scan with global fallback
                     try {
+                        // Add visual feedback
+                        window.showNotification?.("Searching for product...", "info");
+
+                        // Handle the scan with global callback fallback
                         await this.handleScan(decodedText, window._barcodeProductCallback || onProductFound);
                     } catch (err) {
                         console.error("Error in scan handler:", err);
@@ -127,10 +123,27 @@ class BarcodeScanner {
                     }, 1500);
                 },
                 (errorMessage) => {
-                    // Handle scan error silently
-                    console.log("Scanner error (non-fatal):", errorMessage);
+                    // Only log non-fatal errors, don't show to user
+                    console.log("Scanner message:", errorMessage);
                 }
-            );
+            ).catch(err => {
+                console.error("Failed to start scanner:", err);
+                window.showNotification?.("Failed to start scanner: " + err.message, "error");
+
+                // Remove loading spinner
+                const loadingElement = readerElement.querySelector('.scanner-loading');
+                if (loadingElement) {
+                    loadingElement.remove();
+                }
+
+                throw err;
+            });
+
+            // Remove loading spinner after successful start
+            const loadingElement = readerElement.querySelector('.scanner-loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
 
             this.isScanning = true;
             console.log("✅ Scanner started successfully");
@@ -142,41 +155,25 @@ class BarcodeScanner {
     }
 
     async stopScanner() {
-        if (this.html5QrcodeScanner) {
+        if (this.html5QrcodeScanner && this.isScanning) {
             try {
-                console.log("Stopping scanner...");
-                if (this.isScanning) {
-                    await this.html5QrcodeScanner.stop();
-                    console.log("Scanner stopped successfully");
-                }
-
-                // Clean up scanner state regardless of previous state
+                await this.html5QrcodeScanner.stop();
                 this.isScanning = false;
                 this.lastScannedCode = null;
-                this.scanCooldown = false;
-
-                // Give time for the camera to fully release
-                await new Promise(resolve => setTimeout(resolve, 300));
-
-                return true;
+                console.log("Scanner stopped");
             } catch (err) {
                 console.error("Error stopping scanner:", err);
-                // Continue with cleanup even if stop fails
-                this.isScanning = false;
-                this.lastScannedCode = null;
-                return false;
             }
         }
-        return true;
     }
 
     async handleScan(scannedCode, onProductFound) {
         try {
-            console.log("Processing scanned code:", scannedCode);
+            console.log("🔍 Processing scanned code:", scannedCode);
             console.log("Callback type:", typeof onProductFound);
 
             if (!scannedCode || scannedCode.trim() === "") {
-                console.error("Empty barcode scanned");
+                console.error("❌ Empty barcode scanned");
                 window.showNotification?.("Empty or invalid barcode scanned", "error");
                 return;
             }
@@ -186,7 +183,7 @@ class BarcodeScanner {
 
             // Detect if we're on the add-product page by checking the URL or callback type
             const isAddProductPage = window.location.pathname.includes('add-product') ||
-                (typeof onProductFound === 'function' && onProductFound.length === 1);
+                (typeof onProductFound === 'function' && onProductFound.name === 'setScannedBarcode');
 
             if (isAddProductPage) {
                 console.log("Add product page detected, returning barcode directly");
@@ -196,7 +193,7 @@ class BarcodeScanner {
             }
 
             // For record page, search for the product
-            console.log("Record page detected, searching for product with barcode:", normalizedCode);
+            console.log("📝 Record page detected, searching for product with barcode:", normalizedCode);
 
             try {
                 // Use our enhanced findProductByBarcode method
@@ -205,58 +202,65 @@ class BarcodeScanner {
                 // If product found, stop scanner and return it
                 if (product) {
                     console.log("✅ PRODUCT FOUND:", product);
+                    window.showNotification?.(`Found product: ${product.name}`, "success");
+
+                    // Stop the scanner
                     await this.stopScanner();
+
+                    // Make sure the product object has all required fields
+                    const validatedProduct = {
+                        id: product.id || `temp_${Date.now()}`,
+                        name: product.name || "Unknown Product",
+                        price: product.price || 0,
+                        barcode: product.barcode || normalizedCode
+                    };
+                    console.log("Validated product for cart:", validatedProduct);
 
                     // Try multiple approaches to ensure the product is added to cart
                     if (typeof onProductFound === 'function') {
                         try {
                             // 1. Try the callback directly
-                            onProductFound(product);
+                            console.log("Calling provided callback function directly");
+                            onProductFound(validatedProduct);
                             console.log("✅ Product callback executed successfully");
+                            return; // Return here to avoid multiple additions
                         } catch (callbackError) {
                             console.error("❌ Error in product callback:", callbackError);
 
-                            // 2. Try global handleScannedProduct as fallback
-                            if (typeof window.handleScannedProduct === 'function') {
-                                try {
-                                    window.handleScannedProduct(product);
-                                    console.log("✅ Product added via global handleScannedProduct");
-                                } catch (globalError) {
-                                    console.error("❌ Error in global handleScannedProduct:", globalError);
-
-                                    // 3. Last resort - try direct cart addition
-                                    if (typeof window.addToCart === 'function') {
-                                        try {
-                                            window.addToCart(product.id, product.name, product.price, null, 1);
-                                            console.log("✅ Product added via direct addToCart");
-                                        } catch (cartError) {
-                                            console.error("❌ Error in direct addToCart:", cartError);
-                                            window.showNotification?.("Error adding product to cart", "error");
-                                        }
-                                    } else {
-                                        window.showNotification?.("Cannot add product to cart: addToCart not available", "error");
-                                    }
-                                }
-                            } else {
-                                window.showNotification?.("Cannot add product to cart: handler not available", "error");
-                            }
-                        }
-                    } else {
-                        console.error("❌ Product found but callback is not a function:", typeof onProductFound);
-
-                        // Try global function as fallback
-                        if (typeof window.handleScannedProduct === 'function') {
-                            try {
-                                window.handleScannedProduct(product);
-                                console.log("✅ Product added via global handleScannedProduct as fallback");
-                            } catch (error) {
-                                console.error("❌ Error in fallback handleScannedProduct:", error);
-                                window.showNotification?.("Error adding product to cart", "error");
-                            }
-                        } else {
-                            window.showNotification?.("Internal error: Invalid callback", "error");
+                            // Fall through to global methods
                         }
                     }
+
+                    // 2. Try global handleScannedProduct as fallback
+                    if (typeof window.handleScannedProduct === 'function') {
+                        try {
+                            console.log("Calling global handleScannedProduct function");
+                            window.handleScannedProduct(validatedProduct);
+                            console.log("✅ Product added via global handleScannedProduct");
+                            return; // Return here to avoid multiple additions
+                        } catch (globalError) {
+                            console.error("❌ Error in global handleScannedProduct:", globalError);
+
+                            // Fall through to direct cart addition
+                        }
+                    }
+
+                    // 3. Last resort - try direct cart addition
+                    if (typeof window.addToCart === 'function') {
+                        try {
+                            console.log("Using direct addToCart function");
+                            window.addToCart(validatedProduct.id, validatedProduct.name, validatedProduct.price, null, 1);
+                            console.log("✅ Product added via direct addToCart");
+                            return;
+                        } catch (cartError) {
+                            console.error("❌ Error in direct addToCart:", cartError);
+                            window.showNotification?.("Error adding product to cart: " + cartError.message, "error");
+                        }
+                    } else {
+                        console.error("❌ No method available to add product to cart");
+                        window.showNotification?.("Cannot add product to cart: addToCart not available", "error");
+                    }
+
                     return;
                 }
 
@@ -307,10 +311,20 @@ class BarcodeScanner {
                     const tempProduct = await this.createTempProduct(normalizedCode);
                     if (tempProduct) {
                         await this.stopScanner();
+                        // Use the same multi-level fallback approach
                         if (typeof onProductFound === 'function') {
-                            onProductFound(tempProduct);
-                        } else if (typeof window.handleScannedProduct === 'function') {
+                            try {
+                                onProductFound(tempProduct);
+                                return;
+                            } catch (error) {
+                                console.error("Error in callback with temp product:", error);
+                            }
+                        }
+
+                        if (typeof window.handleScannedProduct === 'function') {
                             window.handleScannedProduct(tempProduct);
+                        } else if (typeof window.addToCart === 'function') {
+                            window.addToCart(tempProduct.id, tempProduct.name, tempProduct.price, null, 1);
                         }
                         return;
                     }
