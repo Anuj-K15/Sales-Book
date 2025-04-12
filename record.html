@@ -46,10 +46,6 @@
             <button id="toggle-scanner" class="scanner-btn">
                 <i class="fas fa-barcode"></i> Scan Barcode/QR
             </button>
-            <!-- Debug Button -->
-            <button id="show-debug-panel" class="debug-btn" style="margin-left: 10px; background-color: #2196f3;">
-                <i class="fas fa-keyboard"></i> Enter Barcode Manually
-            </button>
         </div>
 
         <div class="beer-list" id="beer-list">
@@ -76,24 +72,12 @@
 
     <!-- Scanner Modal -->
     <div id="scanner-container" class="scanner-container" style="display: none;">
-        <h3>Scan Barcode/QR Code</h3>
+        <h3>Scan Product</h3>
         <div id="reader"></div>
-        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-            <button id="test-barcode-btn" class="debug-btn"
-                style="flex: 1; margin-right: 5px; background-color: #2196f3;">
-                <i class="fas fa-keyboard"></i> Manual Entry
-            </button>
-            <button id="close-scanner" class="close-scanner-btn" style="flex: 1; margin-left: 5px;">
+        <div style="display: flex; justify-content: center; margin-top: 5px;">
+            <button id="close-scanner" class="close-scanner-btn" style="width: 100%;">
                 <i class="fas fa-times"></i> Close Scanner
             </button>
-        </div>
-        <div id="debug-panel" style="display: none;">
-            <h4>Enter Barcode</h4>
-            <form id="test-barcode-form">
-                <input type="text" id="test-barcode-input" placeholder="Enter barcode manually">
-                <button type="submit">Search Product</button>
-            </form>
-            <button id="close-debug-panel">Cancel</button>
         </div>
     </div>
 
@@ -242,11 +226,6 @@
                 // Scanner button click handler with additional mobile optimizations
                 toggleScannerBtn.addEventListener('click', async () => {
                     console.log("Opening scanner...");
-                    console.log("📱 Current device detection:",
-                        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-                            ? "Mobile device detected"
-                            : "Desktop device detected");
-
                     scannerContainer.style.display = 'block';
 
                     try {
@@ -261,31 +240,11 @@
                             readerElement.removeChild(readerElement.firstChild);
                         }
 
-                        // Ensure reader element is visible and properly sized
+                        // Pre-configure reader for better performance
                         readerElement.style.width = '100%';
                         readerElement.style.height = '250px';
                         readerElement.style.display = 'block';
                         readerElement.style.overflow = 'hidden';
-                        console.log("📏 Reader element dimensions:",
-                            `width=${readerElement.offsetWidth}px, height=${readerElement.offsetHeight}px`);
-
-                        // Short delay to ensure the DOM is updated
-                        await new Promise(resolve => setTimeout(resolve, 200));
-
-                        // On mobile, request camera permission explicitly first
-                        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                            try {
-                                console.log("📱 Mobile device detected, requesting camera permission...");
-                                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                                stream.getTracks().forEach(track => track.stop()); // Stop immediately, just checking for permission
-                                console.log("✅ Camera permission granted");
-                            } catch (permissionError) {
-                                console.error("❌ Camera permission denied:", permissionError);
-                                showNotification("Camera permission required for scanning", "error");
-                                scannerContainer.style.display = 'none';
-                                return;
-                            }
-                        }
 
                         // Set a global callback function that's accessible outside modules
                         window.handleScannedProductCallback = function (product) {
@@ -303,13 +262,6 @@
                                 return;
                             }
 
-                            console.log("Product data validation:", {
-                                hasId: !!product.id,
-                                hasName: !!product.name,
-                                hasPrice: !!product.price,
-                                price: product.price
-                            });
-
                             window.handleScannedProduct(product);
                             scannerContainer.style.display = 'none';
                         };
@@ -319,43 +271,6 @@
                         await barcodeScanner.initializeScanner('reader', window.handleScannedProductCallback);
                         console.log("✅ Scanner initialized successfully");
 
-                        // Add this testing code to debug the scanner
-                        window._scannerDebug = {
-                            testProduct: {
-                                id: "test_product_1",
-                                name: "Test Beer",
-                                price: 100,
-                                barcode: "test123"
-                            },
-                            triggerCallback: function () {
-                                console.log("🧪 Testing callback with sample product");
-                                window.handleScannedProductCallback(this.testProduct);
-                            }
-                        };
-                        // For debugging, automatically try the sample product after 3 seconds
-                        // Uncomment the following line if you want to test the callback
-                        // setTimeout(() => window._scannerDebug.triggerCallback(), 3000);
-
-                        // Initialize test barcode functionality
-                        try {
-                            if (typeof setupTestBarcodeUI === 'function') {
-                                setupTestBarcodeUI();
-                                console.log("✅ Test barcode UI initialized");
-                            } else {
-                                console.log("setupTestBarcodeUI function not available yet");
-                                // Try again after a delay
-                                setTimeout(() => {
-                                    if (typeof setupTestBarcodeUI === 'function') {
-                                        setupTestBarcodeUI();
-                                        console.log("✅ Test barcode UI initialized (delayed)");
-                                    } else {
-                                        console.error("❌ setupTestBarcodeUI function not available after delay");
-                                    }
-                                }, 1500);
-                            }
-                        } catch (err) {
-                            console.error("❌ Error initializing test barcode UI:", err);
-                        }
                     } catch (err) {
                         console.error('❌ Failed to start scanner:', err);
                         scannerContainer.style.display = 'none';
@@ -374,101 +289,10 @@
                     }
                 });
 
-                // For debugging - test if a barcode exists in the database
-                window.testBarcode = async function (barcode) {
-                    if (!barcode) {
-                        console.error("Please provide a barcode to test");
-                        showNotification("Please enter a barcode to test", "error");
-                        return;
-                    }
-
-                    console.log("Testing barcode:", barcode);
-                    showNotification(`Testing barcode: ${barcode}`, "info");
-
-                    try {
-                        // Store current barcode being tested
-                        window._currentTestBarcode = barcode;
-
-                        // First try importing and using the testBarcodeSearch function from scanner.js
-                        const product = await testBarcodeSearch(barcode);
-
-                        if (product) {
-                            console.log("✅ Product found:", product);
-                            showNotification(`Product found: ${product.name} (₹${product.price})`, 'success');
-
-                            // Add the product to the cart
-                            window.handleScannedProduct(product);
-                            return true;
-                        } else {
-                            console.log("❌ No product found for barcode:", barcode);
-
-                            // Provide additional information about why the product might not be found
-                            showNotification(`No product found for barcode: ${barcode}. Check console for details.`, 'error');
-
-                            // Show a confirmation dialog asking if they want to add this product
-                            if (confirm(`No product found for barcode: ${barcode}. Would you like to add it?`)) {
-                                // Redirect to add product page with barcode prefilled
-                                window.location.href = `add-product.html?barcode=${encodeURIComponent(barcode)}`;
-                            }
-                            return false;
-                        }
-                    } catch (error) {
-                        console.error("Error testing barcode:", error);
-                        showNotification(`Error: ${error.message}`, 'error');
-                        return false;
-                    }
-                };
-
-                console.log("✅ Initialization complete - record.html ready");
             } catch (error) {
-                console.error("Error initializing:", error);
-                showNotification('Error initializing: ' + error.message, 'error');
+                console.error("❌ Error initializing scanner on record page:", error);
+                showNotification("Failed to initialize scanner functionality", "error");
             }
-        });
-    </script>
-
-    <!-- Debug Panel - Hidden by Default -->
-    <div id="debug-panel" style="display: none;">
-        <h4>Barcode Scanner Debugger</h4>
-        <form id="test-barcode-form">
-            <div>
-                <label for="test-barcode-input">Test Barcode:</label>
-                <input type="text" id="test-barcode-input">
-            </div>
-            <button type="submit">Test Barcode</button>
-        </form>
-        <div>
-            <button id="close-debug-panel">Close</button>
-        </div>
-    </div>
-
-    <script>
-        // Add the debug panel toggle with Ctrl+Shift+D
-        document.addEventListener('keydown', function (e) {
-            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-                const debugPanel = document.getElementById('debug-panel');
-                debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-            }
-        });
-
-        // Debug button click handler
-        document.getElementById('show-debug-panel').addEventListener('click', function () {
-            const debugPanel = document.getElementById('debug-panel');
-            debugPanel.style.display = 'block';
-        });
-
-        // Set up the test form
-        document.getElementById('test-barcode-form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const barcode = document.getElementById('test-barcode-input').value.trim();
-            if (barcode) {
-                window.testBarcode(barcode);
-            }
-        });
-
-        // Close button
-        document.getElementById('close-debug-panel').addEventListener('click', function () {
-            document.getElementById('debug-panel').style.display = 'none';
         });
     </script>
 </body>

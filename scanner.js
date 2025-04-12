@@ -30,33 +30,16 @@ class BarcodeScanner {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             console.log(`📱 Device: ${isMobile ? 'Mobile' : 'Desktop'}, UserAgent: ${navigator.userAgent}`);
 
-            // Add a loading spinner
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'scanner-loading';
-            loadingDiv.innerHTML = 'Initializing camera...';
-            readerElement.appendChild(loadingDiv);
-
-            // Give the browser a moment to render the container
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            // Create scanner with better mobile-optimized settings
+            // Create scanner immediately without loading indicators
             this.html5QrcodeScanner = new Html5Qrcode(containerId);
-
-            // Check and log available camera devices
-            try {
-                const devices = await Html5Qrcode.getCameras();
-                console.log(`📷 Available cameras: ${devices.length}`, devices);
-            } catch (cameraError) {
-                console.warn("Could not enumerate cameras", cameraError);
-            }
 
             // Define better scanning configuration for mobile
             const config = {
-                fps: isMobile ? 6 : 10, // Further reduced FPS for better performance
+                fps: isMobile ? 10 : 15, // Increased FPS for faster scanning
                 qrbox: isMobile
-                    ? { width: 220, height: 220 } // Slightly larger box for better visibility
+                    ? { width: 220, height: 220 }
                     : { width: 250, height: 250 },
-                aspectRatio: isMobile ? 1.0 : 1.0, // Square aspect ratio
+                aspectRatio: 1.0, // Square aspect ratio
                 formatsToSupport: [
                     Html5QrcodeSupportedFormats.QR_CODE,
                     Html5QrcodeSupportedFormats.EAN_13,
@@ -70,10 +53,10 @@ class BarcodeScanner {
                 ],
                 disableFlip: false,
                 rememberLastUsedCamera: true,
-                showTorchButtonIfSupported: false, // Hide torch/flashlight button
+                showTorchButtonIfSupported: true, // Enable torch button for low light
                 useBarCodeDetectorIfSupported: true,
-                showZoomSliderIfSupported: false, // Hide zoom slider
-                defaultZoomValueIfSupported: 2.0 // Set default zoom to make barcode more visible
+                showZoomSliderIfSupported: false,
+                defaultZoomValueIfSupported: 2.0
             };
 
             console.log(`Starting scanner on ${isMobile ? 'mobile' : 'desktop'} device with config:`, config);
@@ -94,7 +77,7 @@ class BarcodeScanner {
                     console.log("✅ Scanned code:", decodedText);
 
                     // Show feedback to user
-                    window.showNotification?.(`Barcode detected: ${decodedText}`, "info");
+                    window.showNotification?.(`Barcode detected`, "info");
 
                     // Prevent duplicate scans or too frequent scans
                     if (this.scanCooldown || decodedText === this.lastScannedCode) {
@@ -105,17 +88,8 @@ class BarcodeScanner {
                     this.lastScannedCode = decodedText;
                     this.scanCooldown = true;
 
-                    // Remove loading indicator if it exists
-                    const loadingElement = readerElement.querySelector('.scanner-loading');
-                    if (loadingElement) {
-                        loadingElement.remove();
-                    }
-
                     // Process the scan with global fallback
                     try {
-                        // Add visual feedback
-                        window.showNotification?.("Searching for product...", "info");
-
                         // Handle the scan with global callback fallback
                         await this.handleScan(decodedText, window._barcodeProductCallback || onProductFound);
                     } catch (err) {
@@ -135,21 +109,8 @@ class BarcodeScanner {
             ).catch(err => {
                 console.error("Failed to start scanner:", err);
                 window.showNotification?.("Failed to start scanner: " + err.message, "error");
-
-                // Remove loading spinner
-                const loadingElement = readerElement.querySelector('.scanner-loading');
-                if (loadingElement) {
-                    loadingElement.remove();
-                }
-
                 throw err;
             });
-
-            // Remove loading spinner after successful start
-            const loadingElement = readerElement.querySelector('.scanner-loading');
-            if (loadingElement) {
-                loadingElement.remove();
-            }
 
             this.isScanning = true;
             console.log("✅ Scanner started successfully");
@@ -766,68 +727,10 @@ export async function testBarcodeSearch(barcode) {
 window.testBarcodeSearch = testBarcodeSearch;
 window.showNotification = showNotification;
 
-// Setup test barcode functionality
-export function setupTestBarcodeUI() {
-    const testBarcodeBtn = document.getElementById('test-barcode-btn');
-    const debugPanel = document.getElementById('debug-panel');
-    const testBarcodeForm = document.getElementById('test-barcode-form');
-    const closeDebugPanel = document.getElementById('close-debug-panel');
-    const testBarcodeInput = document.getElementById('test-barcode-input');
-
-    if (!testBarcodeBtn || !debugPanel || !testBarcodeForm || !closeDebugPanel) {
-        console.log("Test barcode UI elements not found");
-        return;
-    }
-
-    // Toggle debug panel
-    testBarcodeBtn.addEventListener('click', () => {
-        debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
-        if (debugPanel.style.display === 'block') {
-            testBarcodeInput.focus();
-        }
-    });
-
-    // Close debug panel
-    closeDebugPanel.addEventListener('click', () => {
-        debugPanel.style.display = 'none';
-    });
-
-    // Handle form submission
-    testBarcodeForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const barcode = testBarcodeInput.value.trim();
-
-        if (!barcode) {
-            showNotification('Please enter a barcode to test', 'warning');
-            return;
-        }
-
-        showNotification(`Testing barcode: ${barcode}`, 'info');
-
-        // Get the onProductFound callback from the page
-        const currentPage = window.location.pathname.includes('record.html') ? 'record' :
-            window.location.pathname.includes('add-product.html') ? 'add-product' : 'unknown';
-
-        try {
-            await barcodeScanner.handleScan(barcode, null);
-            testBarcodeInput.value = '';
-            debugPanel.style.display = 'none';
-        } catch (error) {
-            console.error('Error testing barcode:', error);
-            showNotification('Error testing barcode: ' + error.message, 'error');
-        }
-    });
-
-    console.log("✅ Test barcode UI functionality set up");
-}
-
-// Initialize test barcode UI when the scanner is initialized
+// Initialize the core scanning functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait a moment to ensure DOM is fully loaded
-    setTimeout(() => {
-        setupTestBarcodeUI();
-    }, 1000);
+    console.log("✅ Scanner module loaded");
 });
 
-// Make available globally
-window.setupTestBarcodeUI = setupTestBarcodeUI; 
+// Make test function available globally
+window.testBarcodeSearch = testBarcodeSearch; 

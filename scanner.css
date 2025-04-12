@@ -37,57 +37,60 @@
   transform: translate(-50%, -50%);
   z-index: 1000;
   background: white;
-  padding: 15px;
+  padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   width: 90%;
-  max-width: 450px;
-  display: none;
-  max-height: 80vh;
-  overflow: hidden;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .scanner-container h3 {
-  margin-top: 0;
   text-align: center;
+  margin-top: 0;
   margin-bottom: 15px;
   color: #333;
+  font-size: 18px;
 }
 
 #reader {
   width: 100% !important;
-  min-height: 250px;
-  max-height: 50vh;
-  background: #f8f8f8;
-  border-radius: 8px;
-  overflow: hidden;
-  margin: 0 auto;
+  min-height: 200px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 #reader video {
-  border-radius: 8px;
-  object-fit: cover !important;
   width: 100% !important;
-  height: 100% !important;
-  max-height: 45vh !important;
+  height: auto !important;
+  max-height: 50vh !important;
+  object-fit: contain;
 }
 
 .close-scanner {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
+  background: #f44336;
+  color: white;
   border: none;
-  font-size: 24px;
+  padding: 10px 20px;
+  margin-top: 15px;
+  border-radius: 4px;
   cursor: pointer;
-  color: #555;
-  padding: 0;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
 }
 
 .close-scanner:hover {
-  color: #000;
+  background: #d32f2f;
 }
 
 /* Dialog/Prompt Styles */
@@ -95,123 +98,128 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  z-index: 1999;
-  backdrop-filter: blur(3px);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
 }
 
 #barcode-prompt,
-#temp-product-form {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #fff;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  z-index: 2000;
+#quick-product-form {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
   width: 90%;
   max-width: 400px;
-  text-align: center;
-  animation: fadeIn 0.3s ease-out;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative;
+  z-index: 1002;
 }
 
 #barcode-prompt h3,
-#temp-product-form h3 {
+#quick-product-form h3 {
   margin-top: 0;
   color: #333;
-  font-size: 22px;
-  margin-bottom: 15px;
+  font-size: 18px;
+  text-align: center;
 }
 
 #barcode-prompt p,
-#temp-product-form p {
-  margin-bottom: 15px;
-  font-size: 16px;
-  color: #555;
+#quick-product-form p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
 }
 
 .barcode-value {
-  font-weight: bold;
-  color: #000;
   background: #f5f5f5;
-  padding: 2px 6px;
+  padding: 8px;
   border-radius: 4px;
   font-family: monospace;
+  font-size: 14px;
+  color: #333;
+  margin: 5px 0;
 }
 
 .prompt-buttons {
   display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 20px;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .cancel-btn {
-  padding: 10px 18px;
-  background: #f44336;
-  color: white;
+  background: #f5f5f5;
+  color: #333;
   border: none;
-  border-radius: 6px;
+  padding: 10px 15px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 15px;
-  transition: all 0.2s ease;
+  flex: 1;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 .confirm-btn,
 .save-btn {
-  padding: 10px 18px;
   background: #4caf50;
   color: white;
   border: none;
-  border-radius: 6px;
+  padding: 10px 15px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 15px;
-  transition: all 0.2s ease;
+  flex: 1;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 .cancel-btn:hover,
-.confirm-btn:hover,
 .save-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  filter: brightness(0.95);
+  transform: translateY(-1px);
 }
 
 .cancel-btn:active,
-.confirm-btn:active,
 .save-btn:active {
   transform: translateY(1px);
 }
 
 #quick-product-form div {
-  margin-bottom: 15px;
-  text-align: left;
+  margin-bottom: 10px;
 }
 
 #quick-product-form label {
   display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-  font-size: 15px;
-  color: #444;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
 }
 
 #quick-product-form input {
   width: 100%;
-  padding: 12px;
+  padding: 8px;
   border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 15px;
+  border-radius: 4px;
+  font-size: 14px;
   box-sizing: border-box;
-  transition: border 0.2s ease;
 }
 
 #quick-product-form input:focus {
-  outline: none;
   border-color: #4caf50;
+  outline: none;
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
@@ -220,30 +228,27 @@
   position: fixed;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  padding: 12px 20px;
+  transform: translateX(-50%);
   background: #333;
   color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 2500;
-  font-size: 15px;
-  max-width: 90%;
+  padding: 12px 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transition: all 0.3s ease;
   opacity: 0;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  max-width: 90%;
+  width: auto;
+  text-align: center;
+  animation: fadeIn 0.3s forwards;
 }
 
 .notification.show {
-  transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
 
 .notification.hiding {
   opacity: 0;
-  transform: translateX(-50%) translateY(20px);
 }
 
 .notification.success {
@@ -263,201 +268,92 @@
 }
 
 .notification-icon {
-  font-size: 16px;
+  margin-right: 8px;
 }
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
   #barcode-prompt,
-  #temp-product-form {
-    padding: 20px;
-    width: 85%;
+  #quick-product-form {
+    width: 95%;
+    max-width: 350px;
   }
 
   #quick-product-form input {
-    padding: 10px;
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .cancel-btn,
   .confirm-btn,
   .save-btn {
+    padding: 12px 15px;
+    font-size: 16px;
+  }
+
+  .notification {
     padding: 10px 15px;
     font-size: 14px;
   }
 
-  .notification {
-    padding: 10px 16px;
-    font-size: 14px;
-    bottom: 15px;
-  }
-
   .scanner-container {
-    width: 93%;
+    width: 95%;
     padding: 15px;
-    max-height: 95vh;
+    max-width: 400px;
   }
 
   #reader {
-    flex: 1;
-    min-height: 50vh !important;
-    max-height: 60vh !important;
+    min-height: 200px;
     width: 100% !important;
-    margin: 0 0 10px 0;
-  }
-
-  /* Hide the bottom gray area */
-  #reader__dashboard_section {
-    display: none !important;
-  }
-
-  /* Make controls more compact */
-  .debug-btn {
-    height: 40px;
-    margin-bottom: 8px;
-  }
-
-  .close-scanner-btn {
-    margin-top: 5px;
-    height: 50px;
-  }
-
-  /* Make buttons side by side and take equal space */
-  .debug-btn,
-  .close-scanner-btn {
-    flex: 1;
-    height: 48px !important;
-    margin: 0 !important;
-    font-size: 14px !important;
-  }
-
-  /* Increase camera size and reduce everything else */
-  #reader {
-    min-height: 65vw !important; /* Make it more square shaped */
-    max-height: 70vw !important;
-  }
-
-  /* Ensure qr box is visible against black background */
-  #qr-shaded-region {
-    border-color: rgba(255, 255, 255, 0.3) !important;
-  }
-
-  /* Make the container more compact */
-  .scanner-container {
-    padding: 12px !important;
-  }
-
-  /* Better looking title */
-  .scanner-container h3 {
-    font-size: 18px !important;
-    margin-bottom: 10px !important;
+    margin: 0 auto;
   }
 }
 
-/* Animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -48%);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
-}
-
-/* Tablet optimizations */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .scanner-container {
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    padding: 20px;
-  }
-
-  #reader {
-    min-height: 300px;
-    max-height: 45vh;
-  }
-
-  .close-scanner-btn {
-    height: 55px;
-    font-size: 17px;
-  }
-
-  /* Improve touch targets for tablet */
-  #html5-qrcode-button-camera-start,
-  #html5-qrcode-button-camera-stop {
-    padding: 12px !important;
-    min-height: 45px !important;
-    font-size: 16px !important;
-  }
-}
-
+/* Scanner UI Improvements */
 .close-scanner-btn {
-  background: #ff4444;
+  background: #f44336;
   color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 6px;
   margin-top: 15px;
+  border-radius: 4px;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  font-weight: bold;
-  width: 100%;
-}
-
-.close-scanner-btn:hover {
-  background: #ff0000;
-}
-
-.close-scanner-btn:active {
-  transform: translateY(2px);
-}
-
-/* QR Code Display */
-.qr-code-container {
-  text-align: center;
-  margin: 15px 0;
-}
-
-.qr-code-container img {
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 8px;
-  background: white;
-}
-
-/* Scanner Loading State */
-.scanner-loading {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1002;
-  flex-direction: column;
-  font-size: 16px;
-  color: #333;
+  gap: 5px;
+  font-size: 14px;
+  transition: all 0.3s ease;
 }
 
-.scanner-loading::after {
-  content: "";
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #4caf50;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
+.close-scanner-btn:hover {
+  background: #d32f2f;
+}
+
+.close-scanner-btn:active {
+  transform: translateY(1px);
+}
+
+.qr-code-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.qr-code-container img {
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes spin {
@@ -469,210 +365,104 @@
   }
 }
 
-/* Fix for html5-qrcode UI on different browsers */
+/* Fix scanner UI for mobile */
 #reader__scan_region {
-  min-height: 200px;
-  max-height: 250px;
+  min-height: 200px !important;
   position: relative !important;
-  margin: 0 auto !important;
+  text-align: center !important;
   display: flex !important;
+  flex-direction: column !important;
   justify-content: center !important;
   align-items: center !important;
-  width: 100% !important;
-  overflow: hidden !important;
 }
 
-/* Fix Html5QrcodeScanner specific elements that can cause layout issues */
 #reader__dashboard_section_swaplink {
   color: #4caf50 !important;
-  text-decoration: underline !important;
-  font-size: 14px !important;
-  margin-top: 10px !important;
-  display: block !important;
-  text-align: center !important;
+  text-decoration: none !important;
+  margin: 10px 0 !important;
+  display: inline-block !important;
+  font-weight: bold !important;
 }
 
 #reader__camera_selection {
   width: 100% !important;
-  max-width: 400px !important;
   padding: 8px !important;
-  border-radius: 4px !important;
   border: 1px solid #ddd !important;
-  margin: 10px auto !important;
-  display: block !important;
-  font-size: 16px !important; /* Better for mobile touch */
+  border-radius: 4px !important;
+  margin-bottom: 10px !important;
+  background-color: #fff !important;
+  font-size: 14px !important;
+  color: #333 !important;
 }
 
-/* Override any inline styles from html5-qrcode */
 #html5-qrcode-button-camera-start,
 #html5-qrcode-button-camera-stop {
-  padding: 10px 15px !important;
-  min-width: 150px !important;
-  border-radius: 6px !important;
   border: none !important;
-  background: #4caf50 !important;
-  color: white !important;
+  padding: 8px 16px !important;
+  border-radius: 4px !important;
   cursor: pointer !important;
-  margin: 10px auto !important;
-  display: block !important;
-  font-size: 16px !important;
-  touch-action: manipulation;
+  margin: 5px !important;
+  background-color: #4caf50 !important;
+  color: white !important;
+  font-size: 14px !important;
+  font-weight: normal !important;
 }
 
 #html5-qrcode-button-camera-stop {
-  background: #f44336 !important;
+  background-color: #f44336 !important;
 }
 
-/* Reader dashboard section fix for small devices */
 #reader__dashboard_section {
-  padding: 8px !important;
-  margin-top: 8px !important;
-  overflow: hidden !important;
+  padding: 10px !important;
+  margin-top: 10px !important;
 }
 
 #reader__dashboard_section_csr button {
-  touch-action: manipulation;
+  margin-top: 5px !important;
 }
 
-/* Debug Button */
-.debug-btn {
-  background: #555;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 8px;
-}
-
-.debug-btn:hover {
-  background: #444;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.debug-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Debug Panel */
-#debug-panel {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 15px;
-  max-width: 300px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-}
-
-#debug-panel h4 {
-  margin-top: 0;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 8px;
-  color: #333;
-}
-
-#test-barcode-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-#test-barcode-input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-#test-barcode-form button {
-  background: #4caf50;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 16px;
-  min-height: 50px;
-}
-
-#test-barcode-form button:hover {
-  background: #45a049;
-}
-
-#close-debug-panel {
-  background: #f44336;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 10px;
-  width: 100%;
-  font-size: 16px;
-  min-height: 50px;
-}
-
-#close-debug-panel:hover {
-  background: #d32f2f;
-}
-
-/* Fix any potential z-index issues with the scanner overlay */
+/* Fix layout issues caused by the Html5QrcodeScanner */
 div:has(> #reader) {
-  z-index: 1001 !important;
-}
-
-/* Target the QR Box viewfinder */
-#qr-shaded-region {
-  border-width: 50px !important;
-}
-
-/* Hide the extra elements that take up space */
-#reader__status_span,
-#reader__dashboard_section_swaplink {
-  display: none !important;
-}
-
-/* Override any elements from the library that might cause scrolling */
-#reader__dashboard_section_csr {
-  overflow: hidden !important;
-  padding: 0 !important;
-  margin: 0 !important;
   height: auto !important;
-  min-height: 0 !important;
 }
 
-/* Override any potential overflow from html5-qrcode library */
+#qr-shaded-region {
+  border-radius: 10px !important;
+}
+
+#reader__status_span,
+#reader__scan_region {
+  margin-bottom: 10px !important;
+}
+
+#reader__dashboard_section_csr {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
 #reader * {
-  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-/* Additional fixes to hide unwanted elements and gray area */
 #reader__dashboard_section,
-#reader__dashboard_section_csr,
-#reader__dashboard_section_fsr {
-  display: none !important;
-  height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  overflow: hidden !important;
-  visibility: hidden !important;
+#reader__dashboard_section_swaplink {
+  text-align: center !important;
+  margin: 5px auto !important;
+  display: block !important;
+  width: fit-content !important;
+  background: none !important;
+  border: none !important;
+  margin-top: 10px !important;
 }
 
-/* Force the scanner to be clean with no gray area */
+/* Make reader element size constraints stronger */
 #reader {
-  background: #000 !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  overflow: hidden !important;
+  border: 1px solid #ddd !important;
+  border-radius: 5px !important;
 }
