@@ -47,8 +47,8 @@
                 <i class="fas fa-barcode"></i> Scan Barcode/QR
             </button>
             <!-- Debug Button -->
-            <button id="show-debug-panel" class="debug-btn" style="margin-left: 10px; background-color: #555;">
-                <i class="fas fa-bug"></i> Test Barcode
+            <button id="show-debug-panel" class="debug-btn" style="margin-left: 10px; background-color: #2196f3;">
+                <i class="fas fa-keyboard"></i> Enter Barcode Manually
             </button>
         </div>
 
@@ -260,8 +260,9 @@
 
                         // Ensure reader element is visible and properly sized
                         readerElement.style.width = '100%';
-                        readerElement.style.height = '300px';
+                        readerElement.style.height = '250px';
                         readerElement.style.display = 'block';
+                        readerElement.style.overflow = 'hidden';
                         console.log("📏 Reader element dimensions:",
                             `width=${readerElement.offsetWidth}px, height=${readerElement.offsetHeight}px`);
 

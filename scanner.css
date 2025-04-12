@@ -41,8 +41,10 @@
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
   width: 90%;
-  max-width: 500px;
+  max-width: 450px;
   display: none;
+  max-height: 80vh;
+  overflow: hidden;
 }
 
 .scanner-container h3 {
@@ -54,7 +56,8 @@
 
 #reader {
   width: 100% !important;
-  min-height: 300px;
+  min-height: 250px;
+  max-height: 50vh;
   background: #f8f8f8;
   border-radius: 8px;
   overflow: hidden;
@@ -67,6 +70,7 @@
   object-fit: cover !important;
   width: 100% !important;
   height: 100% !important;
+  max-height: 45vh !important;
 }
 
 .close-scanner {
@@ -311,6 +315,7 @@
   .scanner-container {
     width: 100%;
     height: 100%;
+    max-height: 100%;
     top: 0;
     left: 0;
     transform: none;
@@ -324,7 +329,8 @@
 
   #reader {
     flex: 1;
-    min-height: 70vh !important;
+    min-height: 50vh !important;
+    max-height: 60vh !important;
     width: 100% !important;
     margin: 0 0 10px 0;
   }
@@ -374,12 +380,14 @@
 @media (min-width: 768px) and (max-width: 1024px) {
   .scanner-container {
     width: 90%;
-    max-width: 700px;
+    max-width: 600px;
+    max-height: 80vh;
     padding: 20px;
   }
 
   #reader {
-    min-height: 400px;
+    min-height: 300px;
+    max-height: 45vh;
   }
 
   .close-scanner-btn {
@@ -473,13 +481,15 @@
 
 /* Fix for html5-qrcode UI on different browsers */
 #reader__scan_region {
-  min-height: 250px;
+  min-height: 200px;
+  max-height: 250px;
   position: relative !important;
   margin: 0 auto !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
   width: 100% !important;
+  overflow: hidden !important;
 }
 
 /* Fix Html5QrcodeScanner specific elements that can cause layout issues */
@@ -506,7 +516,8 @@
 /* Override any inline styles from html5-qrcode */
 #html5-qrcode-button-camera-start,
 #html5-qrcode-button-camera-stop {
-  padding: 12px 20px !important;
+  padding: 10px 15px !important;
+  min-width: 150px !important;
   border-radius: 6px !important;
   border: none !important;
   background: #4caf50 !important;
@@ -515,7 +526,6 @@
   margin: 10px auto !important;
   display: block !important;
   font-size: 16px !important;
-  min-width: 200px !important;
   touch-action: manipulation;
 }
 
@@ -525,9 +535,9 @@
 
 /* Reader dashboard section fix for small devices */
 #reader__dashboard_section {
-  padding: 10px !important;
-  border-top: 1px solid #eee !important;
-  margin-top: 10px !important;
+  padding: 8px !important;
+  margin-top: 8px !important;
+  overflow: hidden !important;
 }
 
 #reader__dashboard_section_csr button {
@@ -539,15 +549,16 @@
   background: #555;
   color: white;
   border: none;
-  padding: 12px 24px;
+  padding: 10px 15px;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
 }
 
 .debug-btn:hover {
@@ -637,4 +648,9 @@ div:has(> #reader) {
 /* Target the QR Box viewfinder */
 #qr-shaded-region {
   border-width: 50px !important;
+}
+
+/* Override any potential overflow from html5-qrcode library */
+#reader * {
+  max-width: 100% !important;
 }
