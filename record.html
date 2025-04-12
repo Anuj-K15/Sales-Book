@@ -89,9 +89,13 @@
         import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { barcodeScanner, testBarcodeSearch } from "./scanner.js";
 
+        // Make key functions available globally for reliable mobile access
+        window.barcodeScanner = barcodeScanner;
+        window.testBarcodeSearch = testBarcodeSearch;
+
         document.addEventListener('DOMContentLoaded', async function () {
             try {
-                console.log("Initializing barcode scanning functionality...");
+                console.log("Initializing record.html with barcode scanning functionality...");
 
                 // Expose testing function globally
                 window.testBarcodeSearch = testBarcodeSearch;
@@ -107,6 +111,8 @@
                     product.id = doc.id;
                     products.push(product);
                 });
+
+                console.log(`✅ Loaded ${products.length} products from database`);
 
                 // Initialize search bar with products data
                 const searchBar = new SearchBar({
@@ -176,7 +182,7 @@
                     }
                 };
 
-                // Helper function to show notifications
+                // Helper function to show notifications - make it globally available
                 function showNotification(message, type) {
                     const notification = document.createElement('div');
                     notification.className = `notification ${type}`;
@@ -184,7 +190,9 @@
                     document.body.appendChild(notification);
                     setTimeout(() => notification.remove(), 3000);
                 }
+                window.showNotification = showNotification;
 
+                // Scanner button click handler with additional mobile optimizations
                 toggleScannerBtn.addEventListener('click', async () => {
                     console.log("Opening scanner...");
                     scannerContainer.style.display = 'block';
@@ -196,35 +204,59 @@
                             throw new Error("Scanner reader element not found");
                         }
 
+                        // Clear any previous scanner instance
+                        while (readerElement.firstChild) {
+                            readerElement.removeChild(readerElement.firstChild);
+                        }
+
                         // Ensure reader element is visible and properly sized
                         readerElement.style.width = '100%';
                         readerElement.style.height = '300px';
+                        readerElement.style.display = 'block';
 
                         // Short delay to ensure the DOM is updated
-                        await new Promise(resolve => setTimeout(resolve, 100));
+                        await new Promise(resolve => setTimeout(resolve, 200));
 
-                        await barcodeScanner.initializeScanner('reader', (product) => {
-                            console.log("Product scanned:", product);
-                            // Handle scanned product (add to cart)
+                        // On mobile, request camera permission explicitly first
+                        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                            try {
+                                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                                stream.getTracks().forEach(track => track.stop()); // Stop immediately, just checking for permission
+                                console.log("✅ Camera permission granted");
+                            } catch (permissionError) {
+                                console.error("❌ Camera permission denied:", permissionError);
+                                showNotification("Camera permission required for scanning", "error");
+                                scannerContainer.style.display = 'none';
+                                return;
+                            }
+                        }
+
+                        // Set a global callback function that's accessible outside modules
+                        window.handleScannedProductCallback = function (product) {
+                            console.log("Global callback received product:", product);
                             window.handleScannedProduct(product);
                             scannerContainer.style.display = 'none';
-                        });
-                    } catch (err) {
-                        console.error('Failed to start scanner:', err);
-                        scannerContainer.style.display = 'none';
+                        };
 
-                        const notification = document.createElement('div');
-                        notification.className = 'notification error';
-                        notification.textContent = 'Failed to start scanner: ' + err.message;
-                        document.body.appendChild(notification);
-                        setTimeout(() => notification.remove(), 3000);
+                        // Initialize the scanner with global callback
+                        await barcodeScanner.initializeScanner('reader', window.handleScannedProductCallback);
+                        console.log("✅ Scanner initialized successfully");
+                    } catch (err) {
+                        console.error('❌ Failed to start scanner:', err);
+                        scannerContainer.style.display = 'none';
+                        showNotification('Failed to start scanner: ' + (err.message || "Unknown error"), 'error');
                     }
                 });
 
                 closeScannerBtn.addEventListener('click', async () => {
                     console.log("Closing scanner...");
-                    await barcodeScanner.stopScanner();
-                    scannerContainer.style.display = 'none';
+                    try {
+                        await barcodeScanner.stopScanner();
+                    } catch (err) {
+                        console.error("Error stopping scanner:", err);
+                    } finally {
+                        scannerContainer.style.display = 'none';
+                    }
                 });
 
                 // For debugging - test if a barcode exists in the database
@@ -254,14 +286,10 @@
                     }
                 };
 
+                console.log("✅ Initialization complete - record.html ready");
             } catch (error) {
                 console.error("Error initializing:", error);
-
-                const notification = document.createElement('div');
-                notification.className = 'notification error';
-                notification.textContent = 'Error initializing: ' + error.message;
-                document.body.appendChild(notification);
-                setTimeout(() => notification.remove(), 3000);
+                showNotification('Error initializing: ' + error.message, 'error');
             }
         });
     </script>

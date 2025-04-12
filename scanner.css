@@ -48,10 +48,43 @@
   width: 100% !important;
   border-radius: 8px;
   overflow: hidden;
+  min-height: 300px;
 }
 
 #reader video {
   border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Mobile optimizations for scanner */
+@media (max-width: 767px) {
+  .scanner-container {
+    width: 95vw;
+    max-width: none;
+    padding: 15px;
+    top: 50%;
+  }
+
+  #reader {
+    min-height: 250px;
+    height: 50vh !important;
+  }
+
+  #reader video {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Fix for html5-qrcode UI elements */
+  #reader div {
+    box-sizing: border-box !important;
+  }
+
+  /* Make sure the scanner fills the container on mobile */
+  #reader canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
 }
 
 .close-scanner-btn {
@@ -66,10 +99,17 @@
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+  font-weight: bold;
+  width: 100%;
+  justify-content: center;
 }
 
 .close-scanner-btn:hover {
   background: #ff0000;
+}
+
+.close-scanner-btn:active {
+  transform: translateY(2px);
 }
 
 /* Notification Styles */
@@ -83,6 +123,23 @@
   font-weight: 500;
   z-index: 1001;
   animation: slideIn 0.3s ease-out;
+  max-width: 80vw;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile notification adjustments */
+@media (max-width: 767px) {
+  .notification {
+    top: auto;
+    bottom: 20px;
+    right: 50%;
+    transform: translateX(50%);
+    text-align: center;
+    padding: 12px 20px;
+    width: 90vw;
+    font-size: 14px;
+    animation: slideUp 0.3s ease-out;
+  }
 }
 
 .notification.info {
@@ -108,6 +165,17 @@
   }
 }
 
+@keyframes slideUp {
+  from {
+    transform: translateY(100%) translateX(50%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) translateX(50%);
+    opacity: 1;
+  }
+}
+
 /* QR Code Display */
 .qr-code-container {
   text-align: center;
@@ -119,17 +187,6 @@
   padding: 10px;
   border-radius: 8px;
   background: white;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .scanner-container {
-    width: 95vw;
-  }
-
-  #reader {
-    height: auto !important;
-  }
 }
 
 /* Scanner Loading State */
@@ -144,6 +201,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1002;
+  flex-direction: column;
 }
 
 .scanner-loading::after {
@@ -154,6 +212,14 @@
   border-top: 3px solid #4caf50;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+.scanner-loading::before {
+  content: "Opening camera...";
+  font-size: 14px;
+  color: #333;
+  margin-top: 10px;
 }
 
 @keyframes spin {
@@ -163,4 +229,14 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+/* Fix for html5-qrcode UI on different browsers */
+#reader__scan_region {
+  min-height: 200px;
+  position: relative !important;
+}
+
+#reader__dashboard {
+  margin-top: 10px !important;
 }
