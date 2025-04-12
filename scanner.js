@@ -135,176 +135,80 @@ class BarcodeScanner {
     }
 
     async handleScan(scannedCode, onProductFound) {
-        try {
-            console.log("🔍 Processing scanned code:", scannedCode);
-            console.log("Callback type:", typeof onProductFound);
+        console.log("📱 Barcode scanned:", scannedCode);
 
-            if (!scannedCode || scannedCode.trim() === "") {
-                console.error("❌ Empty barcode scanned");
-                window.showNotification?.("Empty or invalid barcode scanned", "error");
-                return;
+        // Normalize barcode data
+        const barcode = scannedCode ? scannedCode.trim() : "";
+
+        if (!barcode) {
+            console.error("Invalid scan data received");
+            this.showNotification("Invalid barcode data", "error");
+            return;
+        }
+
+        console.log("📱 Checking page type...");
+
+        // Check which page we're on (add product or record sale)
+        const isAddProductPage = window.location.href.includes("add-product.html");
+        const isRecordPage = window.location.href.includes("record.html");
+
+        console.log(`📊 Page type: ${isAddProductPage ? "Add Product" : isRecordPage ? "Record Sale" : "Unknown"}`);
+
+        if (isAddProductPage) {
+            // If we're on the add product page, just fill in the barcode field
+            console.log("📝 Filling barcode in add product page");
+            const barcodeInput = document.getElementById("product-barcode");
+            if (barcodeInput) {
+                barcodeInput.value = barcode;
+                this.showNotification("Barcode scanned successfully", "success");
+            } else {
+                console.error("Barcode input field not found");
+                this.showNotification("Could not find barcode input field", "error");
             }
-
-            // Normalize the scanned code (trim whitespace and make consistent)
-            const normalizedCode = scannedCode.trim();
-
-            // Detect if we're on the add-product page by checking the URL or callback type
-            const isAddProductPage = window.location.pathname.includes('add-product') ||
-                (typeof onProductFound === 'function' && onProductFound.name === 'setScannedBarcode');
-
-            if (isAddProductPage) {
-                console.log("Add product page detected, returning barcode directly");
-                await this.stopScanner();
-                onProductFound(normalizedCode);
-                return;
-            }
-
-            // For record page, search for the product
-            console.log("📝 Record page detected, searching for product with barcode:", normalizedCode);
+            // Close scanner after successful scan on add product page
+            this.stopScanner();
+        } else if (isRecordPage) {
+            // If we're on the record page, try to find the product and add to cart
+            console.log("🔍 Looking up product by barcode on record page");
 
             try {
-                // Use our enhanced findProductByBarcode method
-                const product = await this.findProductByBarcode(normalizedCode);
+                // Show loading notification
+                this.showNotification("Looking up product...", "info");
 
-                // If product found, stop scanner and return it
+                const product = await this.findProductByBarcode(barcode);
+
                 if (product) {
-                    console.log("✅ PRODUCT FOUND:", product);
-                    window.showNotification?.(`Found product: ${product.name}`, "success");
+                    console.log("✅ Product found:", product);
 
-                    // Stop the scanner
-                    await this.stopScanner();
-
-                    // Make sure the product object has all required fields
-                    const validatedProduct = {
-                        id: product.id || `temp_${Date.now()}`,
-                        name: product.name || "Unknown Product",
-                        price: product.price || 0,
-                        barcode: product.barcode || normalizedCode
-                    };
-                    console.log("Validated product for cart:", validatedProduct);
-
-                    // Try multiple approaches to ensure the product is added to cart
-                    if (typeof onProductFound === 'function') {
-                        try {
-                            // 1. Try the callback directly
-                            console.log("Calling provided callback function directly");
-                            onProductFound(validatedProduct);
-                            console.log("✅ Product callback executed successfully");
-                            return; // Return here to avoid multiple additions
-                        } catch (callbackError) {
-                            console.error("❌ Error in product callback:", callbackError);
-
-                            // Fall through to global methods
-                        }
-                    }
-
-                    // 2. Try global handleScannedProduct as fallback
-                    if (typeof window.handleScannedProduct === 'function') {
-                        try {
-                            console.log("Calling global handleScannedProduct function");
-                            window.handleScannedProduct(validatedProduct);
-                            console.log("✅ Product added via global handleScannedProduct");
-                            return; // Return here to avoid multiple additions
-                        } catch (globalError) {
-                            console.error("❌ Error in global handleScannedProduct:", globalError);
-
-                            // Fall through to direct cart addition
-                        }
-                    }
-
-                    // 3. Last resort - try direct cart addition
+                    // Call the global addToCart function
                     if (typeof window.addToCart === 'function') {
-                        try {
-                            console.log("Using direct addToCart function");
-                            window.addToCart(validatedProduct.id, validatedProduct.name, validatedProduct.price, null, 1);
-                            console.log("✅ Product added via direct addToCart");
-                            return;
-                        } catch (cartError) {
-                            console.error("❌ Error in direct addToCart:", cartError);
-                            window.showNotification?.("Error adding product to cart: " + cartError.message, "error");
-                        }
+                        window.addToCart(product);
+                        this.showNotification(`Added ${product.name} to cart`, "success");
+                        console.log("✅ Added to cart successfully");
                     } else {
-                        console.error("❌ No method available to add product to cart");
-                        window.showNotification?.("Cannot add product to cart: addToCart not available", "error");
-                    }
-
-                    return;
-                }
-
-                // If no product found but code looks like JSON, try to parse it
-                if (normalizedCode.includes('{') && normalizedCode.includes('}')) {
-                    try {
-                        console.log("Attempting to parse QR code as JSON data");
-                        const productData = JSON.parse(normalizedCode);
-
-                        // If JSON has a barcode field, try to find product by that barcode
-                        if (productData.barcode) {
-                            const productByJsonBarcode = await this.findProductByBarcode(productData.barcode);
-                            if (productByJsonBarcode) {
-                                console.log("Product found via embedded barcode:", productByJsonBarcode);
-                                await this.stopScanner();
-                                onProductFound(productByJsonBarcode);
-                                return;
-                            }
-                        }
-
-                        // If we have a name and price but no product found, create a temporary one
-                        if (productData.name && productData.price) {
-                            console.log("Creating temporary product from QR data:", productData);
-                            const tempProduct = {
-                                id: `temp_${Date.now()}`,
-                                name: productData.name,
-                                price: productData.price,
-                                barcode: productData.barcode || normalizedCode
-                            };
-                            await this.stopScanner();
-                            onProductFound(tempProduct);
-                            return;
-                        }
-                    } catch (jsonError) {
-                        console.error("Error parsing QR JSON data:", jsonError);
-                    }
-                }
-
-                // If we get here, no product was found
-                console.log("❌ Product not found for barcode:", normalizedCode);
-
-                // Show a dialog to ask if the user wants to add this product
-                const shouldAddProduct = await this.showAddProductPrompt(normalizedCode);
-
-                if (shouldAddProduct) {
-                    console.log("User chose to add the product with barcode:", normalizedCode);
-                    // Create a temporary product with the scanned barcode
-                    const tempProduct = await this.createTempProduct(normalizedCode);
-                    if (tempProduct) {
-                        await this.stopScanner();
-                        // Use the same multi-level fallback approach
-                        if (typeof onProductFound === 'function') {
-                            try {
-                                onProductFound(tempProduct);
-                                return;
-                            } catch (error) {
-                                console.error("Error in callback with temp product:", error);
-                            }
-                        }
-
-                        if (typeof window.handleScannedProduct === 'function') {
-                            window.handleScannedProduct(tempProduct);
-                        } else if (typeof window.addToCart === 'function') {
-                            window.addToCart(tempProduct.id, tempProduct.name, tempProduct.price, null, 1);
-                        }
-                        return;
+                        console.error("addToCart function not found in global scope");
+                        this.showNotification("Error: Could not add to cart (function not found)", "error");
                     }
                 } else {
-                    window.showNotification?.("Product not found for barcode: " + normalizedCode, "error");
+                    console.log("❌ No product found for barcode:", barcode);
+
+                    // Check if we should prompt to add the product
+                    if (confirm(`No product found with barcode ${barcode}. Would you like to add it?`)) {
+                        this.stopScanner(); // Stop scanner first
+                        this.showAddProductPrompt(barcode);
+                    } else {
+                        this.showNotification(`No product found with barcode ${barcode}`, "error");
+                    }
                 }
-            } catch (searchError) {
-                console.error("Error searching for product:", searchError);
-                window.showNotification?.("Error searching for product: " + searchError.message, "error");
+            } catch (error) {
+                console.error("Error handling scan:", error);
+                this.showNotification("Error processing scan", "error");
             }
-        } catch (err) {
-            console.error("Error processing scan:", err);
-            window.showNotification?.("Error processing scan: " + err.message, "error");
+
+            // We don't automatically close the scanner on record page to allow multiple scans
+        } else {
+            console.log("⚠️ Not on a recognized page, just displaying the barcode");
+            this.showNotification(`Scanned barcode: ${barcode}`, "info");
         }
     }
 
@@ -322,28 +226,17 @@ class BarcodeScanner {
             const normalizedInputBarcode = barcode.trim();
             console.log(`🔍 Normalized input barcode: "${normalizedInputBarcode}"`);
 
-            // Try to match the exact barcode
+            // Get all products to ensure we have the full dataset to work with
             const productsRef = collection(db, "products");
-            const exactQuery = query(productsRef, where("barcode", "==", normalizedInputBarcode));
-            let snapshot = await getDocs(exactQuery);
-
-            console.log(`📊 Exact match query returned ${snapshot.size} results`);
-
-            if (!snapshot.empty) {
-                const product = {
-                    id: snapshot.docs[0].id,
-                    ...snapshot.docs[0].data()
-                };
-                console.log("✅ Exact match found:", product);
-                return product;
-            }
-
-            // If no exact match, get all products and do manual comparison
-            console.log("⚠️ No exact match found, trying manual comparison...");
             const allProductsQuery = query(productsRef);
-            snapshot = await getDocs(allProductsQuery);
+            const snapshot = await getDocs(allProductsQuery);
 
-            console.log(`📊 Retrieved ${snapshot.size} total products for manual comparison`);
+            console.log(`📊 Retrieved ${snapshot.size} total products for comparison`);
+
+            if (snapshot.empty) {
+                console.log("❌ No products in the database");
+                return null;
+            }
 
             // Convert snapshots to array for easier processing
             const products = snapshot.docs.map(doc => ({
@@ -351,14 +244,30 @@ class BarcodeScanner {
                 ...doc.data()
             }));
 
+            console.log("Products retrieved:", products);
+
+            // Try exact match first
+            const exactMatch = products.find(product => {
+                if (!product.barcode) return false;
+                const productBarcode = String(product.barcode).trim();
+                const matches = productBarcode === normalizedInputBarcode;
+                console.log(`🔄 Exact comparing: "${productBarcode}" vs "${normalizedInputBarcode}" = ${matches}`);
+                return matches;
+            });
+
+            if (exactMatch) {
+                console.log("✅ Exact match found:", exactMatch);
+                return exactMatch;
+            }
+
             // Try case-insensitive comparison
             console.log("🔍 Trying case-insensitive comparison");
             const lowerInputBarcode = normalizedInputBarcode.toLowerCase();
             const caseInsensitiveMatch = products.find(product => {
                 if (!product.barcode) return false;
-                const productBarcode = product.barcode.toString().trim().toLowerCase();
+                const productBarcode = String(product.barcode).trim().toLowerCase();
                 const matches = productBarcode === lowerInputBarcode;
-                console.log(`🔄 Comparing: "${productBarcode}" vs "${lowerInputBarcode}" = ${matches}`);
+                console.log(`🔄 Case-insensitive comparing: "${productBarcode}" vs "${lowerInputBarcode}" = ${matches}`);
                 return matches;
             });
 
@@ -374,7 +283,7 @@ class BarcodeScanner {
 
             const lenientMatch = products.find(product => {
                 if (!product.barcode) return false;
-                const cleanProductBarcode = product.barcode.toString().trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
+                const cleanProductBarcode = String(product.barcode).trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
                 const matches = cleanProductBarcode === cleanInputBarcode;
                 console.log(`🔄 Comparing clean: "${cleanProductBarcode}" vs "${cleanInputBarcode}" = ${matches}`);
                 return matches;
@@ -385,6 +294,23 @@ class BarcodeScanner {
                 return lenientMatch;
             }
 
+            // Try partial matching (barcode contains or is contained within)
+            console.log("⚠️ Trying partial matching...");
+            const partialMatch = products.find(product => {
+                if (!product.barcode) return false;
+                const productBarcode = String(product.barcode).trim();
+                // Check if either contains the other
+                const matchesContains = productBarcode.includes(normalizedInputBarcode) ||
+                    normalizedInputBarcode.includes(productBarcode);
+                console.log(`🔄 Partial comparing: "${productBarcode}" vs "${normalizedInputBarcode}" = ${matchesContains}`);
+                return matchesContains && productBarcode.length > 3 && normalizedInputBarcode.length > 3;
+            });
+
+            if (partialMatch) {
+                console.log("✅ Match found via partial comparison:", partialMatch);
+                return partialMatch;
+            }
+
             // If all else fails, try numeric comparison for numeric barcodes
             if (/^\d+$/.test(normalizedInputBarcode)) {
                 console.log("⚠️ Trying numeric comparison for numeric barcode");
@@ -392,7 +318,7 @@ class BarcodeScanner {
 
                 const numericMatch = products.find(product => {
                     if (!product.barcode) return false;
-                    const productBarcode = product.barcode.toString().trim();
+                    const productBarcode = String(product.barcode).trim();
                     if (!/^\d+$/.test(productBarcode)) return false;
 
                     const numericProductBarcode = parseInt(productBarcode, 10);
@@ -413,7 +339,7 @@ class BarcodeScanner {
 
                     const noZerosMatch = products.find(product => {
                         if (!product.barcode) return false;
-                        const productBarcodeNoZeros = product.barcode.toString().trim().replace(/^0+/, '');
+                        const productBarcodeNoZeros = String(product.barcode).trim().replace(/^0+/, '');
                         const matches = productBarcodeNoZeros === withoutLeadingZeros;
                         console.log(`🔄 Comparing no zeros: "${productBarcodeNoZeros}" vs "${withoutLeadingZeros}" = ${matches}`);
                         return matches;
@@ -435,7 +361,7 @@ class BarcodeScanner {
 
                     const noCheckDigitMatch = products.find(product => {
                         if (!product.barcode) return false;
-                        return product.barcode.toString().trim().includes(withoutCheckDigit);
+                        return String(product.barcode).trim().includes(withoutCheckDigit);
                     });
 
                     if (noCheckDigitMatch) {
@@ -449,7 +375,7 @@ class BarcodeScanner {
 
                     const firstEightMatch = products.find(product => {
                         if (!product.barcode) return false;
-                        return product.barcode.toString().trim().includes(firstEightDigits);
+                        return String(product.barcode).trim().includes(firstEightDigits);
                     });
 
                     if (firstEightMatch) {

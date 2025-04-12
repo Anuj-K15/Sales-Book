@@ -3,6 +3,7 @@ import { db, rtdb } from './firebase-config.js';
 import { collection, getDocs, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { ref, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 import { getTodayIST } from './sales-page.js';
+import { exportSalesToExcel } from './excel-export.js';
 
 // Global variables
 let currentPeriod = 'day';
@@ -10,6 +11,7 @@ let salesData = [];
 let inventoryData = [];
 let revenueChart = null;
 let productsChart = null;
+let currentPeriodDateRange = { startDate: null, endDate: null };
 
 // Initialize dashboard on page load
 document.addEventListener('DOMContentLoaded', async () => {
@@ -36,18 +38,376 @@ function setupEventListeners() {
             await loadDashboardData();
         });
     });
+
+    // Download sales report button
+    document.getElementById('download-sales-report').addEventListener('click', () => {
+        downloadSalesReport();
+    });
+}
+
+// Function to download sales report based on current time period
+function downloadSalesReport() {
+    try {
+        if (!currentPeriodDateRange.startDate || !currentPeriodDateRange.endDate) {
+            alert("Date range not available. Please try again.");
+            return;
+        }
+
+        // Show a notification that download is being prepared
+        const notification = document.createElement('div');
+        notification.className = 'notification success';
+
+        // Custom message based on report type
+        let notificationMessage = 'Preparing report for download...';
+
+        if (currentPeriod === 'year') {
+            notificationMessage = 'Preparing yearly report organized by month...';
+        }
+
+        notification.textContent = notificationMessage;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+
+        switch (currentPeriod) {
+            case 'day':
+                // Export single day (today)
+                exportSalesToExcel(getTodayIST());
+                break;
+
+            case 'week':
+                // Export week with proper date formatting
+                exportDateRangeSales(
+                    currentPeriodDateRange.startDate,
+                    currentPeriodDateRange.endDate,
+                    'week'
+                );
+                break;
+
+            case 'month':
+                // Export month (using YYYY-MM format for current month)
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                exportSalesToExcel(null, `${year}-${month}`);
+                break;
+
+            case 'year':
+                // Export year with proper date formatting
+                exportDateRangeSales(
+                    currentPeriodDateRange.startDate,
+                    currentPeriodDateRange.endDate,
+                    'year'
+                );
+                break;
+
+            default:
+                alert("Invalid time period selected");
+                break;
+        }
+    } catch (error) {
+        console.error("Error downloading report:", error);
+        alert("Failed to download report. Please try again.");
+    }
+}
+
+// Helper function to export date range sales
+async function exportDateRangeSales(startDate, endDate, periodType) {
+    try {
+        const salesRef = collection(db, "sales");
+        let salesQuery = query(
+            salesRef,
+            where("date", ">=", startDate),
+            where("date", "<=", endDate),
+            orderBy("date", "asc"),
+            orderBy("timestamp", "asc")
+        );
+
+        const snapshot = await getDocs(salesQuery);
+
+        if (snapshot.empty) {
+            alert("No sales data available for this period");
+            return;
+        }
+
+        // Format data for Excel
+        const data = [];
+
+        // Add header row with period information
+        data.push([
+            `BeerZone Sales Report - ${getPeriodDisplayName(periodType)}`
+        ]);
+
+        data.push([
+            `Period: ${formatDisplayDate(startDate)} to ${formatDisplayDate(endDate)}`
+        ]);
+
+        data.push([]); // Empty row for spacing
+
+        // When exporting a yearly report, organize by month
+        if (periodType === 'year') {
+            // Group sales by month
+            const salesByMonth = {};
+            let yearlyTotal = 0;
+
+            snapshot.forEach((doc) => {
+                const sale = doc.data();
+                const saleDate = new Date(sale.date);
+                const monthKey = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+
+                if (!salesByMonth[monthKey]) {
+                    salesByMonth[monthKey] = {
+                        sales: [],
+                        total: 0
+                    };
+                }
+
+                salesByMonth[monthKey].sales.push(sale);
+                salesByMonth[monthKey].total += sale.totalAmount;
+                yearlyTotal += sale.totalAmount;
+            });
+
+            // Sort months chronologically
+            const sortedMonths = Object.keys(salesByMonth).sort();
+
+            // Add monthly sections
+            for (const monthKey of sortedMonths) {
+                const monthName = getMonthName(monthKey);
+                const monthSales = salesByMonth[monthKey].sales;
+                const monthTotal = salesByMonth[monthKey].total;
+
+                // Add month header
+                data.push([`Month: ${monthName}`]);
+
+                // Add column headers for this month
+                data.push([
+                    "Order No.",
+                    "Date",
+                    "Time",
+                    "Items",
+                    "Quantities",
+                    "Unit Prices",
+                    "Total Amount",
+                    "Payment Method"
+                ]);
+
+                // Add sales data for this month
+                monthSales.forEach(sale => {
+                    // Format items data
+                    const items = sale.items.map(item => item.name).join(", ");
+                    const quantities = sale.items.map(item => item.quantity).join(", ");
+                    const unitPrices = sale.items.map(item => `₹${item.price}`).join(", ");
+
+                    data.push([
+                        sale.orderNo,
+                        sale.date,
+                        sale.time,
+                        items,
+                        quantities,
+                        unitPrices,
+                        `₹${sale.totalAmount.toFixed(2)}`,
+                        sale.paymentMethod
+                    ]);
+                });
+
+                // Add monthly total
+                data.push([
+                    "Monthly Total",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    `₹${monthTotal.toFixed(2)}`,
+                    ""
+                ]);
+
+                // Add spacing between months
+                data.push([]);
+                data.push([]);
+            }
+
+            // Add yearly total
+            data.push([
+                "YEARLY TOTAL",
+                "",
+                "",
+                "",
+                "",
+                "",
+                `₹${yearlyTotal.toFixed(2)}`,
+                ""
+            ]);
+        } else {
+            // For other period types, use the original format
+            data.push([
+                "Order No.",
+                "Date",
+                "Time",
+                "Items",
+                "Quantities",
+                "Unit Prices",
+                "Total Amount",
+                "Payment Method"
+            ]);
+
+            // Add data rows
+            snapshot.forEach((doc) => {
+                const sale = doc.data();
+
+                // Format items data
+                const items = sale.items.map(item => item.name).join(", ");
+                const quantities = sale.items.map(item => item.quantity).join(", ");
+                const unitPrices = sale.items.map(item => `₹${item.price}`).join(", ");
+
+                data.push([
+                    sale.orderNo,
+                    sale.date,
+                    sale.time,
+                    items,
+                    quantities,
+                    unitPrices,
+                    `₹${sale.totalAmount.toFixed(2)}`,
+                    sale.paymentMethod
+                ]);
+            });
+
+            // Add summary row
+            const totalAmount = snapshot.docs.reduce((sum, doc) => {
+                const sale = doc.data();
+                return sum + sale.totalAmount;
+            }, 0);
+
+            data.push([]); // Empty row for spacing
+            data.push([
+                "TOTAL",
+                "",
+                "",
+                "",
+                "",
+                "",
+                `₹${totalAmount.toFixed(2)}`,
+                ""
+            ]);
+        }
+
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet(data);
+
+        // Set column widths
+        const colWidths = [
+            { wch: 15 },  // Order No
+            { wch: 12 },  // Date
+            { wch: 10 },  // Time
+            { wch: 30 },  // Items
+            { wch: 15 },  // Quantities
+            { wch: 15 },  // Unit Prices
+            { wch: 15 },  // Total Amount
+            { wch: 15 }   // Payment Method
+        ];
+        ws['!cols'] = colWidths;
+
+        // Create style modifications for headers and totals
+        const headerStyle = { font: { bold: true, size: 12 }, fill: { fgColor: { rgb: "E9EAED" } } };
+
+        // Merge cells for the report title and date range
+        ws['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } }
+        ];
+
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sales Data");
+
+        // Generate Excel file and trigger download
+        let filename = "beerzone-sales";
+        if (periodType === 'week') {
+            filename = `beerzone-sales-week-${formatFilenameDate(startDate)}-to-${formatFilenameDate(endDate)}`;
+        } else if (periodType === 'year') {
+            const year = new Date(startDate).getFullYear();
+            filename = `beerzone-sales-year-${year}`;
+        }
+
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+        console.log(`✅ Excel file '${filename}.xlsx' exported successfully!`);
+    } catch (error) {
+        console.error("❌ Error exporting sales to Excel:", error);
+        alert("Error exporting sales data. Please try again.");
+    }
+}
+
+// Helper function to get month name from YYYY-MM format
+function getMonthName(monthKey) {
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    try {
+        const [year, month] = monthKey.split('-');
+        const monthIndex = parseInt(month) - 1;
+        return `${months[monthIndex]} ${year}`;
+    } catch (e) {
+        return monthKey;
+    }
+}
+
+// Helper function to get a display name for each period type
+function getPeriodDisplayName(periodType) {
+    switch (periodType) {
+        case 'day': return 'Daily Report';
+        case 'week': return 'Weekly Report';
+        case 'month': return 'Monthly Report';
+        case 'year': return 'Yearly Report';
+        default: return 'Custom Report';
+    }
+}
+
+// Helper function to format dates for display
+function formatDisplayDate(dateStr) {
+    try {
+        const [year, month, day] = dateStr.split('-');
+        return `${day}/${month}/${year}`;
+    } catch (e) {
+        return dateStr;
+    }
+}
+
+// Helper function to format dates for filenames
+function formatFilenameDate(dateStr) {
+    return dateStr.replace(/-/g, '');
 }
 
 // Update period labels based on selected time period
 function updatePeriodLabels(period) {
-    const labels = document.querySelectorAll('.metric-label');
+    const labels = document.querySelectorAll('.metric-label:not(#download-period-label)');
+    const downloadPeriodLabel = document.getElementById('download-period-label');
 
     let periodText = '';
+    let downloadPeriodText = '';
+
+    const currentYear = new Date().getFullYear();
+
     switch (period) {
-        case 'day': periodText = 'Today'; break;
-        case 'week': periodText = 'This Week'; break;
-        case 'month': periodText = 'This Month'; break;
-        case 'year': periodText = 'This Year'; break;
+        case 'day':
+            periodText = 'Today';
+            downloadPeriodText = 'Today\'s Report';
+            break;
+        case 'week':
+            periodText = 'This Week';
+            downloadPeriodText = 'Weekly Report';
+            break;
+        case 'month':
+            periodText = 'This Month';
+            downloadPeriodText = 'Monthly Report';
+            break;
+        case 'year':
+            periodText = 'This Year';
+            downloadPeriodText = `${currentYear} Yearly Report (Monthly Breakdown)`;
+            break;
     }
 
     labels.forEach(label => {
@@ -55,6 +415,10 @@ function updatePeriodLabels(period) {
             label.textContent = periodText;
         }
     });
+
+    if (downloadPeriodLabel) {
+        downloadPeriodLabel.textContent = downloadPeriodText;
+    }
 }
 
 // Main function to load all dashboard data
@@ -140,6 +504,9 @@ async function fetchSalesData() {
     const today = getTodayIST();
     const currentDate = new Date();
 
+    // Store date range for use in downloads
+    currentPeriodDateRange.endDate = today;
+
     switch (currentPeriod) {
         case 'day':
             // Get today's sales
@@ -148,6 +515,7 @@ async function fetchSalesData() {
                 where('date', '==', today),
                 orderBy('timestamp', 'desc')
             );
+            currentPeriodDateRange.startDate = today;
             break;
 
         case 'week':
@@ -163,6 +531,7 @@ async function fetchSalesData() {
                 orderBy('date', 'desc'),
                 orderBy('timestamp', 'desc')
             );
+            currentPeriodDateRange.startDate = weekStart;
             break;
 
         case 'month':
@@ -177,6 +546,7 @@ async function fetchSalesData() {
                 orderBy('date', 'desc'),
                 orderBy('timestamp', 'desc')
             );
+            currentPeriodDateRange.startDate = monthStart;
             break;
 
         case 'year':
@@ -191,6 +561,7 @@ async function fetchSalesData() {
                 orderBy('date', 'desc'),
                 orderBy('timestamp', 'desc')
             );
+            currentPeriodDateRange.startDate = yearStart;
             break;
 
         default:
@@ -200,6 +571,8 @@ async function fetchSalesData() {
                 where('date', '==', today),
                 orderBy('timestamp', 'desc')
             );
+            currentPeriodDateRange.startDate = today;
+            break;
     }
 
     const snapshot = await getDocs(salesQuery);
@@ -207,6 +580,8 @@ async function fetchSalesData() {
         id: doc.id,
         ...doc.data()
     }));
+
+    return salesData;
 }
 
 // Fetch inventory data from Realtime Database
