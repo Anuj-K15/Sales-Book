@@ -87,11 +87,15 @@
     <script type="module">
         import { db } from "./firebase-config.js";
         import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { barcodeScanner } from "./scanner.js";
+        import { barcodeScanner, testBarcodeSearch } from "./scanner.js";
 
         document.addEventListener('DOMContentLoaded', async function () {
             try {
                 console.log("Initializing barcode scanning functionality...");
+
+                // Expose testing function globally
+                window.testBarcodeSearch = testBarcodeSearch;
+                console.log("✅ Test function available: Call testBarcodeSearch('your-barcode') in console to test");
 
                 // Fetch products from Firestore
                 const productsRef = collection(db, "products");
@@ -184,7 +188,21 @@
                 toggleScannerBtn.addEventListener('click', async () => {
                     console.log("Opening scanner...");
                     scannerContainer.style.display = 'block';
+
                     try {
+                        // Make sure the reader element is visible and has size
+                        const readerElement = document.getElementById('reader');
+                        if (!readerElement) {
+                            throw new Error("Scanner reader element not found");
+                        }
+
+                        // Ensure reader element is visible and properly sized
+                        readerElement.style.width = '100%';
+                        readerElement.style.height = '300px';
+
+                        // Short delay to ensure the DOM is updated
+                        await new Promise(resolve => setTimeout(resolve, 100));
+
                         await barcodeScanner.initializeScanner('reader', (product) => {
                             console.log("Product scanned:", product);
                             // Handle scanned product (add to cart)
@@ -217,14 +235,19 @@
                     }
 
                     console.log("Testing barcode:", barcode);
-                    const product = await barcodeScanner.findProductByBarcode(barcode);
+                    try {
+                        const product = await testBarcodeSearch(barcode);
 
-                    if (product) {
-                        console.log("✅ Product found:", product);
-                        showNotification(`Product found: ${product.name} (₹${product.price})`, 'success');
-                    } else {
-                        console.log("❌ No product found for barcode:", barcode);
-                        showNotification(`No product found for barcode: ${barcode}`, 'error');
+                        if (product) {
+                            console.log("✅ Product found:", product);
+                            showNotification(`Product found: ${product.name} (₹${product.price})`, 'success');
+                        } else {
+                            console.log("❌ No product found for barcode:", barcode);
+                            showNotification(`No product found for barcode: ${barcode}`, 'error');
+                        }
+                    } catch (error) {
+                        console.error("Error testing barcode:", error);
+                        showNotification(`Error: ${error.message}`, 'error');
                     }
                 };
 

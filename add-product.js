@@ -118,7 +118,7 @@ form.addEventListener('submit', async (e) => {
         // Get form values
         const name = nameInput.value.trim();
         const price = parseFloat(priceInput.value);
-        const barcode = barcodeInput.value.trim();
+        let barcode = barcodeInput.value.trim();
         const imageFile = imageInput.files[0];
 
         if (!name) {
@@ -136,6 +136,16 @@ form.addEventListener('submit', async (e) => {
             return;
         }
 
+        // Ensure barcode exists and is normalized
+        if (!barcode) {
+            barcode = generateRandomBarcode();
+            console.log("Generated random barcode:", barcode);
+        } else {
+            // Ensure barcode is a string and trimmed
+            barcode = String(barcode).trim();
+            console.log("Using user-provided barcode:", barcode);
+        }
+
         // Convert image to base64
         const base64Image = await convertImageToBase64(imageFile);
 
@@ -143,10 +153,13 @@ form.addEventListener('submit', async (e) => {
         const product = {
             name,
             price,
-            barcode: barcode ? barcode.trim() : generateRandomBarcode(),
+            barcode,
             image: base64Image,
             createdAt: new Date().toISOString()
         };
+
+        // Log the product before adding to Firestore
+        console.log("Adding product to database:", product);
 
         // Add to Firestore
         const docRef = await addDoc(collection(db, "products"), product);
