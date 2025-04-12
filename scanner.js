@@ -229,7 +229,26 @@ class BarcodeScanner {
 
                 // If we get here, no product was found
                 console.log("❌ Product not found for barcode:", normalizedCode);
-                window.showNotification?.("Product not found for barcode: " + normalizedCode, "error");
+
+                // Show a dialog to ask if the user wants to add this product
+                const shouldAddProduct = await this.showAddProductPrompt(normalizedCode);
+
+                if (shouldAddProduct) {
+                    console.log("User chose to add the product with barcode:", normalizedCode);
+                    // Create a temporary product with the scanned barcode
+                    const tempProduct = await this.createTempProduct(normalizedCode);
+                    if (tempProduct) {
+                        await this.stopScanner();
+                        if (typeof onProductFound === 'function') {
+                            onProductFound(tempProduct);
+                        } else if (typeof window.handleScannedProduct === 'function') {
+                            window.handleScannedProduct(tempProduct);
+                        }
+                        return;
+                    }
+                } else {
+                    window.showNotification?.("Product not found for barcode: " + normalizedCode, "error");
+                }
             } catch (searchError) {
                 console.error("Error searching for product:", searchError);
                 window.showNotification?.("Error searching for product: " + searchError.message, "error");
@@ -240,7 +259,7 @@ class BarcodeScanner {
         }
     }
 
-    // Helper method to find products by barcode - FIXED VERSION
+    // Helper method to find products by barcode - IMPROVED VERSION
     async findProductByBarcode(barcode) {
         console.log("🔍 Searching for barcode:", barcode);
 
@@ -250,9 +269,12 @@ class BarcodeScanner {
         }
 
         try {
-            // Normalize barcode for consistent comparison
+            // Normalize barcode for consistent comparison - this is critical
             const normalizedInputBarcode = barcode.trim();
             console.log(`🔍 Normalized input barcode: "${normalizedInputBarcode}"`);
+
+            // Log additional debugging info about the query we're about to make
+            console.log(`🔍 Running Firestore query for barcode: "${normalizedInputBarcode}"`);
 
             // Try to match the exact barcode
             const productsRef = collection(db, "products");
@@ -270,32 +292,53 @@ class BarcodeScanner {
                 return product;
             }
 
-            // If no exact match, get all products and do manual comparison
-            console.log("⚠️ No exact match found, trying manual comparison...");
+            // If no exact match, get all products and do more flexible matching
+            console.log("⚠️ No exact match found, retrieving all products for manual comparison");
             const allProductsQuery = query(productsRef);
             snapshot = await getDocs(allProductsQuery);
+
+            if (snapshot.empty) {
+                console.log("❌ No products found in database at all");
+                return null;
+            }
 
             console.log(`📊 Retrieved ${snapshot.size} total products for manual comparison`);
 
             // Convert snapshots to array for easier processing
-            const products = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const products = snapshot.docs.map(doc => {
+                const data = doc.data();
+                // Make sure barcode is always a string for consistent comparison
+                if (data.barcode !== undefined && data.barcode !== null) {
+                    data.barcode = String(data.barcode).trim();
+                }
+                return {
+                    id: doc.id,
+                    ...data
+                };
+            });
+
+            // Log all product barcodes for debugging
+            console.log("Available product barcodes:", products.map(p => p.barcode || "undefined"));
 
             // Try case-insensitive comparison
             console.log("🔍 Trying case-insensitive comparison");
             const lowerInputBarcode = normalizedInputBarcode.toLowerCase();
-            const caseInsensitiveMatch = products.find(product => {
-                if (!product.barcode) return false;
-                const productBarcode = product.barcode.toString().trim().toLowerCase();
-                const matches = productBarcode === lowerInputBarcode;
-                console.log(`🔄 Comparing: "${productBarcode}" vs "${lowerInputBarcode}" = ${matches}`);
-                return matches;
-            });
+            let caseInsensitiveMatch = null;
+
+            for (const product of products) {
+                if (!product.barcode) continue;
+
+                const productBarcode = String(product.barcode).trim().toLowerCase();
+                console.log(`🔄 Comparing: "${productBarcode}" vs "${lowerInputBarcode}"`);
+
+                if (productBarcode === lowerInputBarcode) {
+                    caseInsensitiveMatch = product;
+                    console.log("✅ Match found via case-insensitive comparison:", product);
+                    break;
+                }
+            }
 
             if (caseInsensitiveMatch) {
-                console.log("✅ Match found via case-insensitive comparison:", caseInsensitiveMatch);
                 return caseInsensitiveMatch;
             }
 
@@ -304,16 +347,22 @@ class BarcodeScanner {
             const cleanInputBarcode = lowerInputBarcode.replace(/[^a-z0-9]/gi, '');
             console.log(`🔍 Cleaned input barcode: "${cleanInputBarcode}"`);
 
-            const lenientMatch = products.find(product => {
-                if (!product.barcode) return false;
-                const cleanProductBarcode = product.barcode.toString().trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
-                const matches = cleanProductBarcode === cleanInputBarcode;
-                console.log(`🔄 Comparing clean: "${cleanProductBarcode}" vs "${cleanInputBarcode}" = ${matches}`);
-                return matches;
-            });
+            let lenientMatch = null;
+
+            for (const product of products) {
+                if (!product.barcode) continue;
+
+                const cleanProductBarcode = String(product.barcode).trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
+                console.log(`🔄 Comparing clean: "${cleanProductBarcode}" vs "${cleanInputBarcode}"`);
+
+                if (cleanProductBarcode === cleanInputBarcode) {
+                    lenientMatch = product;
+                    console.log("✅ Match found via cleaned comparison:", product);
+                    break;
+                }
+            }
 
             if (lenientMatch) {
-                console.log("✅ Match found via cleaned comparison:", lenientMatch);
                 return lenientMatch;
             }
 
@@ -322,20 +371,81 @@ class BarcodeScanner {
                 console.log("⚠️ Trying numeric comparison for numeric barcode");
                 const numericInputBarcode = parseInt(normalizedInputBarcode, 10);
 
-                const numericMatch = products.find(product => {
-                    if (!product.barcode) return false;
-                    const productBarcode = product.barcode.toString().trim();
-                    if (!/^\d+$/.test(productBarcode)) return false;
+                let numericMatch = null;
+
+                for (const product of products) {
+                    if (!product.barcode) continue;
+
+                    const productBarcode = String(product.barcode).trim();
+                    if (!/^\d+$/.test(productBarcode)) continue;
 
                     const numericProductBarcode = parseInt(productBarcode, 10);
-                    const matches = numericProductBarcode === numericInputBarcode;
-                    console.log(`🔄 Comparing numeric: ${numericProductBarcode} vs ${numericInputBarcode} = ${matches}`);
-                    return matches;
-                });
+                    console.log(`🔄 Comparing numeric: ${numericProductBarcode} vs ${numericInputBarcode}`);
+
+                    if (numericProductBarcode === numericInputBarcode) {
+                        numericMatch = product;
+                        console.log("✅ Match found via numeric comparison:", product);
+                        break;
+                    }
+                }
 
                 if (numericMatch) {
-                    console.log("✅ Match found via numeric comparison:", numericMatch);
                     return numericMatch;
+                }
+
+                // Try stripping leading zeros as sometimes scanners add them
+                if (normalizedInputBarcode.startsWith('0')) {
+                    const withoutLeadingZeros = normalizedInputBarcode.replace(/^0+/, '');
+                    console.log(`🔍 Trying without leading zeros: "${withoutLeadingZeros}"`);
+
+                    let noZerosMatch = null;
+
+                    for (const product of products) {
+                        if (!product.barcode) continue;
+
+                        const productBarcodeNoZeros = String(product.barcode).trim().replace(/^0+/, '');
+                        console.log(`🔄 Comparing no zeros: "${productBarcodeNoZeros}" vs "${withoutLeadingZeros}"`);
+
+                        if (productBarcodeNoZeros === withoutLeadingZeros) {
+                            noZerosMatch = product;
+                            console.log("✅ Match found without leading zeros:", product);
+                            break;
+                        }
+                    }
+
+                    if (noZerosMatch) {
+                        return noZerosMatch;
+                    }
+                }
+
+                // Try partial match for numeric barcodes - some scanners might truncate or add digits
+                console.log("⚠️ Trying partial match...");
+
+                let bestPartialMatch = null;
+                let bestMatchLength = 0;
+
+                for (const product of products) {
+                    if (!product.barcode) continue;
+
+                    const productBarcode = String(product.barcode).trim();
+
+                    // Check if one contains the other
+                    if (productBarcode.includes(normalizedInputBarcode) ||
+                        normalizedInputBarcode.includes(productBarcode)) {
+
+                        const matchLength = Math.min(productBarcode.length, normalizedInputBarcode.length);
+
+                        if (matchLength > bestMatchLength) {
+                            bestPartialMatch = product;
+                            bestMatchLength = matchLength;
+                            console.log(`✅ Found partial match: ${productBarcode} with overlap of ${matchLength} digits`);
+                        }
+                    }
+                }
+
+                if (bestPartialMatch) {
+                    console.log("✅ Using best partial match:", bestPartialMatch);
+                    return bestPartialMatch;
                 }
             }
 
@@ -343,6 +453,177 @@ class BarcodeScanner {
             return null;
         } catch (error) {
             console.error("Error searching for product by barcode:", error);
+            return null;
+        }
+    }
+
+    // Helper method to prompt user to add a product that was not found
+    async showAddProductPrompt(barcode) {
+        return new Promise((resolve) => {
+            // Check if we already have a prompt showing
+            if (document.getElementById('barcode-prompt')) {
+                document.getElementById('barcode-prompt').remove();
+            }
+
+            // Remove any existing backdrop
+            if (document.getElementById('prompt-backdrop')) {
+                document.getElementById('prompt-backdrop').remove();
+            }
+
+            // Create backdrop
+            const backdrop = document.createElement('div');
+            backdrop.id = 'prompt-backdrop';
+            backdrop.className = 'prompt-backdrop';
+            document.body.appendChild(backdrop);
+
+            // Create prompt container
+            const promptDiv = document.createElement('div');
+            promptDiv.id = 'barcode-prompt';
+
+            // Add content
+            promptDiv.innerHTML = `
+                <h3>Product Not Found</h3>
+                <p>Barcode: <span class="barcode-value">${barcode}</span></p>
+                <p>This product is not in your database. Would you like to add it?</p>
+                <div class="prompt-buttons">
+                    <button id="cancel-add-product" class="cancel-btn">Cancel</button>
+                    <button id="confirm-add-product" class="confirm-btn">Add Product</button>
+                </div>
+            `;
+
+            document.body.appendChild(promptDiv);
+
+            // Add event listeners
+            document.getElementById('cancel-add-product').addEventListener('click', () => {
+                promptDiv.remove();
+                backdrop.remove();
+                resolve(false);
+            });
+
+            document.getElementById('confirm-add-product').addEventListener('click', () => {
+                promptDiv.remove();
+                // Don't remove backdrop, as we'll use it for the next prompt
+                resolve(true);
+            });
+        });
+    }
+
+    // Helper method to create a temporary product with user input
+    async createTempProduct(barcode) {
+        return new Promise((resolve) => {
+            // Check if we already have a form showing
+            if (document.getElementById('temp-product-form')) {
+                document.getElementById('temp-product-form').remove();
+            }
+
+            // Create backdrop if it doesn't exist
+            let backdrop = document.getElementById('prompt-backdrop');
+            if (!backdrop) {
+                backdrop = document.createElement('div');
+                backdrop.id = 'prompt-backdrop';
+                backdrop.className = 'prompt-backdrop';
+                document.body.appendChild(backdrop);
+            }
+
+            // Create form container
+            const formDiv = document.createElement('div');
+            formDiv.id = 'temp-product-form';
+
+            // Add form fields
+            formDiv.innerHTML = `
+                <h3>Add New Product</h3>
+                <p>Barcode: <span class="barcode-value">${barcode}</span></p>
+                <form id="quick-product-form">
+                    <div>
+                        <label for="quick-product-name">Product Name:</label>
+                        <input type="text" id="quick-product-name" placeholder="Enter product name" autocomplete="off" required>
+                    </div>
+                    <div>
+                        <label for="quick-product-price">Price (₹):</label>
+                        <input type="number" id="quick-product-price" placeholder="Enter price" min="1" step="any" required>
+                    </div>
+                    <div class="prompt-buttons">
+                        <button type="button" id="cancel-quick-product" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="save-btn">Save Product</button>
+                    </div>
+                </form>
+            `;
+
+            document.body.appendChild(formDiv);
+
+            // Focus the first input
+            setTimeout(() => {
+                document.getElementById('quick-product-name').focus();
+            }, 100);
+
+            // Add event listeners
+            document.getElementById('cancel-quick-product').addEventListener('click', () => {
+                formDiv.remove();
+                backdrop.remove();
+                resolve(null);
+            });
+
+            document.getElementById('quick-product-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const name = document.getElementById('quick-product-name').value;
+                const price = parseFloat(document.getElementById('quick-product-price').value);
+
+                if (!name || !price) {
+                    window.showNotification?.("Please fill in all fields", "error");
+                    return;
+                }
+
+                formDiv.remove();
+                backdrop.remove();
+
+                // Show saving notification
+                window.showNotification?.("Saving product...", "info");
+
+                // Add the new product to Firestore if possible
+                const productId = await this.saveNewProduct(barcode, name, price);
+
+                // Return a product object to add to cart
+                resolve({
+                    id: productId || `temp_${Date.now()}`,
+                    name: name,
+                    price: price,
+                    barcode: barcode
+                });
+            });
+        });
+    }
+
+    // Helper method to save a new product to Firestore
+    async saveNewProduct(barcode, name, price) {
+        try {
+            if (!db) {
+                console.error("Firestore not available");
+                return null;
+            }
+
+            const productsRef = collection(db, "products");
+            const newProduct = {
+                name: name,
+                price: price,
+                barcode: barcode,
+                createdAt: new Date().toISOString()
+            };
+
+            console.log("Adding new product to database:", newProduct);
+
+            // Import the needed function
+            const { addDoc } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+
+            // Add to Firestore
+            const docRef = await addDoc(productsRef, newProduct);
+            console.log("✅ Product added with ID:", docRef.id);
+            window.showNotification?.(`Product "${name}" added successfully`, "success");
+
+            return docRef.id;
+        } catch (error) {
+            console.error("Error saving new product:", error);
+            window.showNotification?.("Could not save product to database, but added to cart", "info");
             return null;
         }
     }
@@ -381,18 +662,51 @@ function showNotification(message, type = 'info') {
         window.showNotification = showNotification;
     }
 
-    // Remove any existing notifications
+    // Remove any existing notifications with the same message
     const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
+    existingNotifications.forEach(notification => {
+        if (notification.textContent === message) {
+            notification.remove();
+        }
+    });
 
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
 
+    // Add different icons based on notification type
+    let icon = '';
+    switch (type) {
+        case 'success':
+            icon = '✅';
+            break;
+        case 'error':
+            icon = '❌';
+            break;
+        case 'info':
+            icon = 'ℹ️';
+            break;
+        case 'warning':
+            icon = '⚠️';
+            break;
+    }
+
+    if (icon) {
+        notification.innerHTML = `<span class="notification-icon">${icon}</span> ${message}`;
+    }
+
     document.body.appendChild(notification);
 
+    // Add animation class after a brief delay
     setTimeout(() => {
-        notification.remove();
+        notification.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+        notification.classList.add('hiding');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
     }, 3000);
 }
 
@@ -409,9 +723,14 @@ export async function testBarcodeSearch(barcode) {
     }
 
     try {
+        // Normalize the barcode for consistent comparison
+        const normalizedBarcode = barcode.toString().trim();
+        console.log("🔍 Normalized barcode for search:", normalizedBarcode);
+
         // First try using the scanner's findProductByBarcode method
         const scanner = barcodeScanner;
-        const product = await scanner.findProductByBarcode(barcode);
+        console.log("🔄 Using scanner.findProductByBarcode() method...");
+        const product = await scanner.findProductByBarcode(normalizedBarcode);
 
         if (product) {
             console.log("✅ Found product via scanner method:", product);
@@ -419,9 +738,33 @@ export async function testBarcodeSearch(barcode) {
         }
 
         // If not found, try a direct Firestore query with exact match
-        console.log("🔍 Trying direct Firestore query...");
+        console.log("❌ No product found via scanner method, trying direct Firestore query...");
         const productsRef = collection(db, "products");
-        const exactQuery = query(productsRef, where("barcode", "==", barcode));
+
+        // Log all products and their barcodes for debugging
+        console.log("📋 Retrieving all products to check available barcodes:");
+        const debugQuery = query(productsRef);
+        const debugSnapshot = await getDocs(debugQuery);
+
+        if (debugSnapshot.empty) {
+            console.log("❌ No products found in database at all!");
+            return null;
+        }
+
+        const allProducts = debugSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                name: data.name,
+                barcode: data.barcode
+            };
+        });
+
+        console.table(allProducts);
+
+        // Continue with exact match query
+        console.log("🔍 Trying exact match query with barcode:", normalizedBarcode);
+        const exactQuery = query(productsRef, where("barcode", "==", normalizedBarcode));
         const snapshot = await getDocs(exactQuery);
 
         if (!snapshot.empty) {
@@ -434,6 +777,7 @@ export async function testBarcodeSearch(barcode) {
         }
 
         console.log("❌ No product found for barcode:", barcode);
+        console.log("💡 Suggestion: Try adding a product with this exact barcode.");
         return null;
     } catch (error) {
         console.error("Error in test barcode search:", error);
@@ -443,4 +787,4 @@ export async function testBarcodeSearch(barcode) {
 
 // Make sure functions are globally available
 window.testBarcodeSearch = testBarcodeSearch;
-window.showNotification = showNotification; 
+window.showNotification = showNotification;

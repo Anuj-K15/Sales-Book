@@ -10,6 +10,26 @@ if (!db) {
     console.log("✅ Firestore is initialized in add-product.js");
 }
 
+// Process URL parameters (for pre-filling barcode from scan)
+document.addEventListener("DOMContentLoaded", function () {
+    try {
+        // Check if we have a barcode in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const barcode = urlParams.get('barcode');
+
+        if (barcode) {
+            console.log("Found barcode in URL parameters:", barcode);
+            const barcodeInput = document.getElementById('product-barcode');
+            if (barcodeInput) {
+                barcodeInput.value = barcode;
+                showNotification(`Barcode pre-filled from scanner: ${barcode}`, "info");
+            }
+        }
+    } catch (error) {
+        console.error("Error processing URL parameters:", error);
+    }
+});
+
 // Get form elements
 const form = document.getElementById('product-form');
 const nameInput = document.getElementById('product-name');
