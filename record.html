@@ -241,6 +241,9 @@
                         if (product) {
                             console.log("✅ Product found:", product);
                             showNotification(`Product found: ${product.name} (₹${product.price})`, 'success');
+
+                            // Add the product to the cart
+                            window.handleScannedProduct(product);
                         } else {
                             console.log("❌ No product found for barcode:", barcode);
                             showNotification(`No product found for barcode: ${barcode}`, 'error');

@@ -172,6 +172,8 @@ document.addEventListener("DOMContentLoaded", loadProducts);
 
 // ✅ Function to add products to the cart
 window.addToCart = function (productId, name, price, buttonElement, scannedQuantity) {
+    console.log("Adding to cart:", { productId, name, price, scannedQuantity, buttonType: buttonElement ? "Button Click" : "Scanner" });
+
     let quantity = 1; // Default quantity
 
     if (scannedQuantity) {
@@ -198,6 +200,8 @@ window.addToCart = function (productId, name, price, buttonElement, scannedQuant
         totalPrice: price * quantity
     };
 
+    console.log("✅ Adding item to cart:", item);
+
     // Add item to cart
     cart.push(item);
 
@@ -214,6 +218,11 @@ window.addToCart = function (productId, name, price, buttonElement, scannedQuant
             buttonElement.textContent = "Add to Cart";
             buttonElement.style.backgroundColor = "";
         }, 1000);
+    } else {
+        // For scanned items, show a notification
+        if (typeof showNotification === 'function') {
+            showNotification(`Added ${name} to cart (${quantity})`, 'success');
+        }
     }
 
     return true; // Successfully added
@@ -386,4 +395,23 @@ window.recordSale = async function () {
         console.error("❌ Error recording sale:", error);
         alert("Error recording sale. Please try again.");
     }
+};
+
+// Global function for showing notifications
+window.showNotification = function (message, type = 'info') {
+    console.log(`Notification (${type}):`, message);
+
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
 };

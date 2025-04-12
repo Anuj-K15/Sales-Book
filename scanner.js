@@ -86,9 +86,22 @@ class BarcodeScanner {
 
                 // If product found, stop scanner and return it
                 if (product) {
-                    console.log("Product found:", product);
+                    console.log("✅ PRODUCT FOUND - ADDING TO CART:", product);
                     await this.stopScanner();
-                    onProductFound(product);
+
+                    // Make sure the callback is called with the product
+                    if (typeof onProductFound === 'function') {
+                        try {
+                            onProductFound(product);
+                            console.log("✅ Product callback executed successfully");
+                        } catch (callbackError) {
+                            console.error("❌ Error in product callback:", callbackError);
+                            showNotification("Error adding product to cart: " + callbackError.message, "error");
+                        }
+                    } else {
+                        console.error("❌ Product found but callback is not a function:", typeof onProductFound);
+                        showNotification("Internal error: Invalid callback", "error");
+                    }
                     return;
                 }
 
@@ -128,7 +141,7 @@ class BarcodeScanner {
                 }
 
                 // If we get here, no product was found
-                console.log("Product not found for barcode:", normalizedCode);
+                console.log("❌ Product not found for barcode:", normalizedCode);
                 showNotification("Product not found for barcode: " + normalizedCode, "error");
             } catch (searchError) {
                 console.error("Error searching for product:", searchError);
