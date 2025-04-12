@@ -192,18 +192,26 @@ window.addToCart = function (productId, name, price, buttonElement, scannedQuant
         }
     }
 
-    const item = {
-        id: productId,
-        name: name,
-        price: price,
-        quantity: quantity,
-        totalPrice: price * quantity
-    };
+    // Check if the product is already in the cart
+    const existingItemIndex = cart.findIndex(item => item.id === productId);
 
-    console.log("✅ Adding item to cart:", item);
-
-    // Add item to cart
-    cart.push(item);
+    if (existingItemIndex !== -1) {
+        // Product exists in cart, increment quantity
+        cart[existingItemIndex].quantity += quantity;
+        cart[existingItemIndex].totalPrice = cart[existingItemIndex].price * cart[existingItemIndex].quantity;
+        console.log(`✅ Updated quantity for ${name} to ${cart[existingItemIndex].quantity}`);
+    } else {
+        // Product does not exist in cart, add new item
+        const item = {
+            id: productId,
+            name: name,
+            price: price,
+            quantity: quantity,
+            totalPrice: price * quantity
+        };
+        cart.push(item);
+        console.log("✅ Added new item to cart:", item);
+    }
 
     // Update the cart UI
     updateCart();
@@ -221,7 +229,12 @@ window.addToCart = function (productId, name, price, buttonElement, scannedQuant
     } else {
         // For scanned items, show a notification
         if (typeof showNotification === 'function') {
-            showNotification(`Added ${name} to cart (${quantity})`, 'success');
+            // Show different messages for new vs. updated items
+            if (existingItemIndex !== -1) {
+                showNotification(`Updated ${name} quantity to ${cart[existingItemIndex].quantity}`, 'success');
+            } else {
+                showNotification(`Added ${name} to cart (${quantity})`, 'success');
+            }
         }
     }
 
@@ -258,8 +271,35 @@ function updateCart() {
 
 // ✅ Function to remove an item from the cart
 window.removeFromCart = function (index) {
-    cart.splice(index, 1); // ✅ Remove item at given index
-    updateCart(); // ✅ Refresh cart UI
+    // Check if the item exists at this index
+    if (index >= 0 && index < cart.length) {
+        // If quantity is greater than 1, just decrement
+        if (cart[index].quantity > 1) {
+            cart[index].quantity -= 1;
+            cart[index].totalPrice = cart[index].price * cart[index].quantity;
+            console.log(`Decreased quantity of ${cart[index].name} to ${cart[index].quantity}`);
+
+            // Optional: Show notification
+            if (typeof showNotification === 'function') {
+                showNotification(`Removed one ${cart[index].name} from cart`, 'info');
+            }
+        } else {
+            // Quantity is 1, remove the item completely
+            const removedItem = cart[index];
+            cart.splice(index, 1);
+            console.log(`Removed ${removedItem.name} from cart`);
+
+            // Optional: Show notification
+            if (typeof showNotification === 'function') {
+                showNotification(`Removed ${removedItem.name} from cart`, 'info');
+            }
+        }
+
+        // Update the cart UI
+        updateCart();
+    } else {
+        console.error(`Invalid cart index: ${index}`);
+    }
 };
 
 // ✅ Function to get current date and time in IST
