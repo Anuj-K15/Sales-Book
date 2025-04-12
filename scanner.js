@@ -140,7 +140,7 @@ class BarcodeScanner {
         }
     }
 
-    // Helper method to find products by barcode
+    // Helper method to find products by barcode - FIXED VERSION
     async findProductByBarcode(barcode) {
         console.log("🔍 Searching for barcode:", barcode);
 
@@ -150,9 +150,13 @@ class BarcodeScanner {
         }
 
         try {
+            // Normalize barcode for consistent comparison
+            const normalizedInputBarcode = barcode.trim();
+            console.log(`🔍 Normalized input barcode: "${normalizedInputBarcode}"`);
+
             // Try to match the exact barcode
             const productsRef = collection(db, "products");
-            const exactQuery = query(productsRef, where("barcode", "==", barcode));
+            const exactQuery = query(productsRef, where("barcode", "==", normalizedInputBarcode));
             let snapshot = await getDocs(exactQuery);
 
             console.log(`📊 Exact match query returned ${snapshot.size} results`);
@@ -173,70 +177,77 @@ class BarcodeScanner {
 
             console.log(`📊 Retrieved ${snapshot.size} total products for manual comparison`);
 
-            const normalizedBarcode = barcode.toLowerCase().trim();
-            console.log(`🔍 Normalized barcode for comparison: "${normalizedBarcode}"`);
-
-            // First try exact case-insensitive matching
-            let matchedProduct = null;
+            // Convert snapshots to array for easier processing
+            const products = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
 
             // Log all product barcodes for diagnosis
             console.log("📋 All product barcodes:");
-            snapshot.forEach((doc) => {
-                const product = doc.data();
-                const productBarcode = (product.barcode || "").trim();
+            products.forEach(product => {
+                const productBarcode = product.barcode ? product.barcode.toString().trim() : "";
                 console.log(`- Product: ${product.name}, Barcode: "${productBarcode}", Type: ${typeof productBarcode}`);
             });
 
-            snapshot.forEach((doc) => {
-                const product = doc.data();
-                const productBarcode = (product.barcode || "").trim();
-                const normalizedProductBarcode = productBarcode.toLowerCase();
-
-                // Log each comparison
-                console.log(`🔄 Comparing: "${normalizedProductBarcode}" vs "${normalizedBarcode}"`);
-
-                if (normalizedProductBarcode === normalizedBarcode) {
-                    matchedProduct = {
-                        id: doc.id,
-                        ...product
-                    };
-                    console.log("✅ Match found via case-insensitive comparison:", matchedProduct);
-                    return true; // Break the loop
-                }
+            // Try case-insensitive comparison
+            console.log("🔍 Trying case-insensitive comparison");
+            const lowerInputBarcode = normalizedInputBarcode.toLowerCase();
+            const caseInsensitiveMatch = products.find(product => {
+                if (!product.barcode) return false;
+                const productBarcode = product.barcode.toString().trim().toLowerCase();
+                const matches = productBarcode === lowerInputBarcode;
+                console.log(`🔄 Comparing: "${productBarcode}" vs "${lowerInputBarcode}" = ${matches}`);
+                return matches;
             });
 
-            if (matchedProduct) {
-                return matchedProduct;
+            if (caseInsensitiveMatch) {
+                console.log("✅ Match found via case-insensitive comparison:", caseInsensitiveMatch);
+                return caseInsensitiveMatch;
             }
 
-            // If still no match, try with more lenient comparison (removing spaces and special chars)
+            // Try more lenient comparison (removing spaces and special chars)
             console.log("⚠️ No case-insensitive match, trying more lenient comparison...");
-            const cleanBarcode = normalizedBarcode.replace(/[^a-z0-9]/gi, '');
-            console.log(`🔍 Cleaned barcode: "${cleanBarcode}"`);
+            const cleanInputBarcode = lowerInputBarcode.replace(/[^a-z0-9]/gi, '');
+            console.log(`🔍 Cleaned input barcode: "${cleanInputBarcode}"`);
 
-            snapshot.forEach((doc) => {
-                const product = doc.data();
-                const productBarcode = (product.barcode || "").trim();
-                const cleanProductBarcode = productBarcode.toLowerCase().replace(/[^a-z0-9]/gi, '');
-
-                // Log each comparison
-                console.log(`🔄 Comparing clean: "${cleanProductBarcode}" vs "${cleanBarcode}"`);
-
-                if (cleanProductBarcode === cleanBarcode) {
-                    matchedProduct = {
-                        id: doc.id,
-                        ...product
-                    };
-                    console.log("✅ Match found via cleaned comparison:", matchedProduct);
-                    return true; // Break the loop
-                }
+            const lenientMatch = products.find(product => {
+                if (!product.barcode) return false;
+                const cleanProductBarcode = product.barcode.toString().trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
+                const matches = cleanProductBarcode === cleanInputBarcode;
+                console.log(`🔄 Comparing clean: "${cleanProductBarcode}" vs "${cleanInputBarcode}" = ${matches}`);
+                return matches;
             });
 
-            if (!matchedProduct) {
-                console.log("❌ No match found for barcode after all attempts");
+            if (lenientMatch) {
+                console.log("✅ Match found via cleaned comparison:", lenientMatch);
+                return lenientMatch;
             }
 
-            return matchedProduct;
+            // If all else fails, try numeric comparison for numeric barcodes
+            if (/^\d+$/.test(normalizedInputBarcode)) {
+                console.log("⚠️ Trying numeric comparison for numeric barcode");
+                const numericInputBarcode = parseInt(normalizedInputBarcode, 10);
+
+                const numericMatch = products.find(product => {
+                    if (!product.barcode) return false;
+                    const productBarcode = product.barcode.toString().trim();
+                    if (!/^\d+$/.test(productBarcode)) return false;
+
+                    const numericProductBarcode = parseInt(productBarcode, 10);
+                    const matches = numericProductBarcode === numericInputBarcode;
+                    console.log(`🔄 Comparing numeric: ${numericProductBarcode} vs ${numericInputBarcode} = ${matches}`);
+                    return matches;
+                });
+
+                if (numericMatch) {
+                    console.log("✅ Match found via numeric comparison:", numericMatch);
+                    return numericMatch;
+                }
+            }
+
+            console.log("❌ No match found for barcode after all attempts");
+            return null;
         } catch (error) {
             console.error("Error searching for product by barcode:", error);
             return null;

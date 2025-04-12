@@ -262,6 +262,49 @@
             }
         });
     </script>
+
+    <!-- Debug Panel - Hidden by Default -->
+    <div id="debug-panel"
+        style="position: fixed; bottom: 0; right: 0; background: #f8f8f8; border: 1px solid #ddd; padding: 10px; max-width: 300px; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: none; z-index: 1000;">
+        <h4 style="margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Barcode Scanner Debugger</h4>
+        <form id="test-barcode-form">
+            <div style="margin-bottom: 10px;">
+                <label for="test-barcode-input">Test Barcode:</label>
+                <input type="text" id="test-barcode-input" style="width: 100%; padding: 5px;">
+            </div>
+            <button type="submit"
+                style="background: #4CAF50; color: white; border: none; padding: 5px 10px; cursor: pointer;">Test
+                Barcode</button>
+        </form>
+        <div style="margin-top: 10px;">
+            <button id="close-debug-panel"
+                style="background: #f44336; color: white; border: none; padding: 5px 10px; cursor: pointer;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Add the debug panel toggle with Ctrl+Shift+D
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                const debugPanel = document.getElementById('debug-panel');
+                debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+
+        // Set up the test form
+        document.getElementById('test-barcode-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const barcode = document.getElementById('test-barcode-input').value.trim();
+            if (barcode) {
+                window.testBarcode(barcode);
+            }
+        });
+
+        // Close button
+        document.getElementById('close-debug-panel').addEventListener('click', function () {
+            document.getElementById('debug-panel').style.display = 'none';
+        });
+    </script>
 </body>
 
 </html>
