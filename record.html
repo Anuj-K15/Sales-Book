@@ -76,7 +76,9 @@
 
     <!-- Scanner Modal -->
     <div id="scanner-container" class="scanner-container" style="display: none;">
+        <h3>Scan Product Barcode</h3>
         <div id="reader"></div>
+        <p class="scan-instructions">Point your camera at a barcode</p>
         <button id="close-scanner" class="close-scanner-btn">
             <i class="fas fa-times"></i> Close Scanner
         </button>
@@ -206,9 +208,10 @@
                             ? "Mobile device detected"
                             : "Desktop device detected");
 
-                    scannerContainer.style.display = 'block';
-
                     try {
+                        // First show the scanner container
+                        scannerContainer.style.display = 'block';
+
                         // Make sure the reader element is visible and has size
                         const readerElement = document.getElementById('reader');
                         if (!readerElement) {
@@ -227,25 +230,7 @@
                         console.log("📏 Reader element dimensions:",
                             `width=${readerElement.offsetWidth}px, height=${readerElement.offsetHeight}px`);
 
-                        // Short delay to ensure the DOM is updated
-                        await new Promise(resolve => setTimeout(resolve, 200));
-
-                        // On mobile, request camera permission explicitly first
-                        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                            try {
-                                console.log("📱 Mobile device detected, requesting camera permission...");
-                                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                                stream.getTracks().forEach(track => track.stop()); // Stop immediately, just checking for permission
-                                console.log("✅ Camera permission granted");
-                            } catch (permissionError) {
-                                console.error("❌ Camera permission denied:", permissionError);
-                                showNotification("Camera permission required for scanning", "error");
-                                scannerContainer.style.display = 'none';
-                                return;
-                            }
-                        }
-
-                        // Set a global callback function that's accessible outside modules
+                        // Define a clear success callback function
                         window.handleScannedProductCallback = function (product) {
                             console.log("Global callback received product:", product);
 
@@ -268,8 +253,16 @@
                                 price: product.price
                             });
 
+                            // Add the product to cart
                             window.handleScannedProduct(product);
+
+                            // Hide scanner after successful scan
                             scannerContainer.style.display = 'none';
+
+                            // Stop the scanner
+                            barcodeScanner.stopScanner().catch(err => {
+                                console.error("Error stopping scanner after successful scan:", err);
+                            });
                         };
 
                         // Initialize the scanner with global callback
@@ -285,12 +278,21 @@
 
                 closeScannerBtn.addEventListener('click', async () => {
                     console.log("Closing scanner...");
+
+                    // First hide the scanner UI immediately for better user experience
+                    scannerContainer.style.display = 'none';
+
                     try {
-                        await barcodeScanner.stopScanner();
+                        // Then stop the actual scanner
+                        const stopResult = await barcodeScanner.stopScanner();
+                        if (stopResult) {
+                            console.log("✅ Scanner stopped successfully");
+                        } else {
+                            console.warn("⚠️ Scanner may not have stopped properly");
+                        }
                     } catch (err) {
-                        console.error("Error stopping scanner:", err);
-                    } finally {
-                        scannerContainer.style.display = 'none';
+                        console.error("❌ Error stopping scanner:", err);
+                        // No need to show error to user since the UI is already hidden
                     }
                 });
 
