@@ -78,19 +78,22 @@
     <div id="scanner-container" class="scanner-container" style="display: none;">
         <h3>Scan Barcode/QR Code</h3>
         <div id="reader"></div>
-        <button id="test-barcode-btn" class="debug-btn">
-            <i class="fas fa-keyboard"></i> Test Barcode
-        </button>
-        <button id="close-scanner" class="close-scanner-btn">
-            <i class="fas fa-times"></i> Close Scanner
-        </button>
+        <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+            <button id="test-barcode-btn" class="debug-btn"
+                style="flex: 1; margin-right: 5px; background-color: #2196f3;">
+                <i class="fas fa-keyboard"></i> Manual Entry
+            </button>
+            <button id="close-scanner" class="close-scanner-btn" style="flex: 1; margin-left: 5px;">
+                <i class="fas fa-times"></i> Close Scanner
+            </button>
+        </div>
         <div id="debug-panel" style="display: none;">
-            <h4>Test Barcode</h4>
+            <h4>Enter Barcode</h4>
             <form id="test-barcode-form">
                 <input type="text" id="test-barcode-input" placeholder="Enter barcode manually">
-                <button type="submit">Test Search</button>
+                <button type="submit">Search Product</button>
             </form>
-            <button id="close-debug-panel">Close</button>
+            <button id="close-debug-panel">Cancel</button>
         </div>
     </div>
 

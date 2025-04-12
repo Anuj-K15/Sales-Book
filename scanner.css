@@ -293,8 +293,64 @@
   }
 
   .scanner-container {
-    width: 95%;
+    width: 93%;
     padding: 15px;
+    max-height: 95vh;
+  }
+
+  #reader {
+    flex: 1;
+    min-height: 50vh !important;
+    max-height: 60vh !important;
+    width: 100% !important;
+    margin: 0 0 10px 0;
+  }
+
+  /* Hide the bottom gray area */
+  #reader__dashboard_section {
+    display: none !important;
+  }
+
+  /* Make controls more compact */
+  .debug-btn {
+    height: 40px;
+    margin-bottom: 8px;
+  }
+
+  .close-scanner-btn {
+    margin-top: 5px;
+    height: 50px;
+  }
+
+  /* Make buttons side by side and take equal space */
+  .debug-btn,
+  .close-scanner-btn {
+    flex: 1;
+    height: 48px !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+  }
+
+  /* Increase camera size and reduce everything else */
+  #reader {
+    min-height: 65vw !important; /* Make it more square shaped */
+    max-height: 70vw !important;
+  }
+
+  /* Ensure qr box is visible against black background */
+  #qr-shaded-region {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+
+  /* Make the container more compact */
+  .scanner-container {
+    padding: 12px !important;
+  }
+
+  /* Better looking title */
+  .scanner-container h3 {
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
   }
 }
 
@@ -307,165 +363,6 @@
   to {
     opacity: 1;
     transform: translate(-50%, -50%);
-  }
-}
-
-/* Mobile optimizations for scanner */
-@media (max-width: 767px) {
-  .scanner-container {
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
-    top: 0;
-    left: 0;
-    transform: none;
-    border-radius: 0;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    max-width: none;
-  }
-
-  #reader {
-    flex: 1;
-    min-height: 50vh !important;
-    max-height: 60vh !important;
-    width: 100% !important;
-    margin: 0 0 10px 0;
-  }
-
-  /* Fix the size of the video element */
-  #reader video {
-    height: 100% !important;
-    width: 100% !important;
-    object-fit: cover !important;
-  }
-
-  /* Fix for html5-qrcode UI elements */
-  #reader div {
-    box-sizing: border-box !important;
-  }
-
-  /* Make sure the scanner fills the container on mobile */
-  #reader canvas {
-    width: 100% !important;
-    height: auto !important;
-  }
-
-  .close-scanner-btn {
-    margin-top: 10px;
-    height: 60px;
-    font-size: 18px;
-  }
-
-  /* Improve touch targets for mobile */
-  #html5-qrcode-button-camera-start,
-  #html5-qrcode-button-camera-stop {
-    padding: 15px !important;
-    min-height: 50px !important;
-    font-size: 16px !important;
-    touch-action: manipulation;
-  }
-
-  /* Fix camera selection dropdown on mobile */
-  #reader__camera_selection {
-    font-size: 16px !important;
-    padding: 12px !important;
-    height: 50px !important;
-  }
-}
-
-@media (max-width: 575px) {
-  .scanner-container {
-    width: 100%;
-    height: 100vh;
-    max-height: 100vh;
-    top: 0;
-    left: 0;
-    transform: none;
-    border-radius: 0;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    max-width: none;
-    position: fixed;
-    background-color: #000; /* dark background for contrast */
-    z-index: 9999;
-  }
-
-  #reader {
-    flex: 1;
-    width: 100% !important;
-    min-height: 60vh !important;
-    max-height: 70vh !important;
-    margin-bottom: 10px;
-    background-color: #111; /* camera feed background */
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  #reader video {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 8px;
-  }
-
-  #reader div {
-    box-sizing: border-box !important;
-  }
-
-  #reader canvas {
-    width: 100% !important;
-    height: auto !important;
-  }
-
-  .close-scanner-btn {
-    height: 50px;
-    font-size: 16px;
-    font-weight: bold;
-    padding: 10px 15px;
-    background-color: #e74c3c;
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-    width: 100%;
-    transition: background-color 0.2s ease;
-  }
-
-  .close-scanner-btn:hover {
-    background-color: #c0392b;
-  }
-
-  #html5-qrcode-button-camera-start,
-  #html5-qrcode-button-camera-stop {
-    width: 100%;
-    padding: 14px !important;
-    min-height: 48px !important;
-    font-size: 15px !important;
-    font-weight: bold;
-    border-radius: 8px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    margin-top: 10px;
-    touch-action: manipulation;
-  }
-
-  #reader__camera_selection {
-    width: 100%;
-    font-size: 15px !important;
-    padding: 10px !important;
-    height: 45px !important;
-    border-radius: 8px;
-    margin-top: 10px;
-    border: 1px solid #ccc;
-    background-color: #fff;
   }
 }
 
@@ -743,7 +640,39 @@ div:has(> #reader) {
   border-width: 50px !important;
 }
 
+/* Hide the extra elements that take up space */
+#reader__status_span,
+#reader__dashboard_section_swaplink {
+  display: none !important;
+}
+
+/* Override any elements from the library that might cause scrolling */
+#reader__dashboard_section_csr {
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
 /* Override any potential overflow from html5-qrcode library */
 #reader * {
   max-width: 100% !important;
+}
+
+/* Additional fixes to hide unwanted elements and gray area */
+#reader__dashboard_section,
+#reader__dashboard_section_csr,
+#reader__dashboard_section_fsr {
+  display: none !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+}
+
+/* Force the scanner to be clean with no gray area */
+#reader {
+  background: #000 !important;
 }

@@ -52,11 +52,11 @@ class BarcodeScanner {
 
             // Define better scanning configuration for mobile
             const config = {
-                fps: isMobile ? 8 : 10, // Lower FPS for better performance
+                fps: isMobile ? 6 : 10, // Further reduced FPS for better performance
                 qrbox: isMobile
-                    ? { width: 200, height: 200 } // Smaller box for mobile
-                    : { width: 250, height: 250 }, // Smaller box for desktop
-                aspectRatio: isMobile ? 0.9 : 1.0, // Slightly wider on mobile
+                    ? { width: 220, height: 220 } // Slightly larger box for better visibility
+                    : { width: 250, height: 250 },
+                aspectRatio: isMobile ? 1.0 : 1.0, // Square aspect ratio
                 formatsToSupport: [
                     Html5QrcodeSupportedFormats.QR_CODE,
                     Html5QrcodeSupportedFormats.EAN_13,
@@ -70,8 +70,10 @@ class BarcodeScanner {
                 ],
                 disableFlip: false,
                 rememberLastUsedCamera: true,
-                showTorchButtonIfSupported: true, // Show flashlight button if available
-                useBarCodeDetectorIfSupported: true // Use native barcode detection if available
+                showTorchButtonIfSupported: false, // Hide torch/flashlight button
+                useBarCodeDetectorIfSupported: true,
+                showZoomSliderIfSupported: false, // Hide zoom slider
+                defaultZoomValueIfSupported: 2.0 // Set default zoom to make barcode more visible
             };
 
             console.log(`Starting scanner on ${isMobile ? 'mobile' : 'desktop'} device with config:`, config);
