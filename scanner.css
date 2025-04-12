@@ -376,6 +376,99 @@
   }
 }
 
+@media (max-width: 575px) {
+  .scanner-container {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    top: 0;
+    left: 0;
+    transform: none;
+    border-radius: 0;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    max-width: none;
+    position: fixed;
+    background-color: #000; /* dark background for contrast */
+    z-index: 9999;
+  }
+
+  #reader {
+    flex: 1;
+    width: 100% !important;
+    min-height: 60vh !important;
+    max-height: 70vh !important;
+    margin-bottom: 10px;
+    background-color: #111; /* camera feed background */
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #reader video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 8px;
+  }
+
+  #reader div {
+    box-sizing: border-box !important;
+  }
+
+  #reader canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .close-scanner-btn {
+    height: 50px;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 15px;
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s ease;
+  }
+
+  .close-scanner-btn:hover {
+    background-color: #c0392b;
+  }
+
+  #html5-qrcode-button-camera-start,
+  #html5-qrcode-button-camera-stop {
+    width: 100%;
+    padding: 14px !important;
+    min-height: 48px !important;
+    font-size: 15px !important;
+    font-weight: bold;
+    border-radius: 8px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    margin-top: 10px;
+    touch-action: manipulation;
+  }
+
+  #reader__camera_selection {
+    width: 100%;
+    font-size: 15px !important;
+    padding: 10px !important;
+    height: 45px !important;
+    border-radius: 8px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+  }
+}
+
 /* Tablet optimizations */
 @media (min-width: 768px) and (max-width: 1024px) {
   .scanner-container {
