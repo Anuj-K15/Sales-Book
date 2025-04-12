@@ -59,6 +59,7 @@
   border-radius: 8px;
   overflow: hidden;
   margin: 0 auto;
+  position: relative;
 }
 
 #reader video {
@@ -317,12 +318,15 @@
     padding: 10px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    max-width: none;
   }
 
   #reader {
     flex: 1;
     min-height: 70vh !important;
     width: 100% !important;
+    margin: 0 0 10px 0;
   }
 
   /* Fix the size of the video element */
@@ -344,9 +348,51 @@
   }
 
   .close-scanner-btn {
-    margin-top: 20px;
-    height: 50px;
+    margin-top: 10px;
+    height: 60px;
     font-size: 18px;
+  }
+
+  /* Improve touch targets for mobile */
+  #html5-qrcode-button-camera-start,
+  #html5-qrcode-button-camera-stop {
+    padding: 15px !important;
+    min-height: 50px !important;
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+
+  /* Fix camera selection dropdown on mobile */
+  #reader__camera_selection {
+    font-size: 16px !important;
+    padding: 12px !important;
+    height: 50px !important;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .scanner-container {
+    width: 90%;
+    max-width: 700px;
+    padding: 20px;
+  }
+
+  #reader {
+    min-height: 400px;
+  }
+
+  .close-scanner-btn {
+    height: 55px;
+    font-size: 17px;
+  }
+
+  /* Improve touch targets for tablet */
+  #html5-qrcode-button-camera-start,
+  #html5-qrcode-button-camera-stop {
+    padding: 12px !important;
+    min-height: 45px !important;
+    font-size: 16px !important;
   }
 }
 
@@ -360,11 +406,11 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   transition: all 0.3s ease;
   font-weight: bold;
   width: 100%;
-  justify-content: center;
 }
 
 .close-scanner-btn:hover {
@@ -427,12 +473,13 @@
 
 /* Fix for html5-qrcode UI on different browsers */
 #reader__scan_region {
-  min-height: 200px;
+  min-height: 250px;
   position: relative !important;
   margin: 0 auto !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
+  width: 100% !important;
 }
 
 /* Fix Html5QrcodeScanner specific elements that can cause layout issues */
@@ -442,6 +489,7 @@
   font-size: 14px !important;
   margin-top: 10px !important;
   display: block !important;
+  text-align: center !important;
 }
 
 #reader__camera_selection {
@@ -452,23 +500,38 @@
   border: 1px solid #ddd !important;
   margin: 10px auto !important;
   display: block !important;
+  font-size: 16px !important; /* Better for mobile touch */
 }
 
 /* Override any inline styles from html5-qrcode */
 #html5-qrcode-button-camera-start,
 #html5-qrcode-button-camera-stop {
-  padding: 10px 15px !important;
-  border-radius: 4px !important;
+  padding: 12px 20px !important;
+  border-radius: 6px !important;
   border: none !important;
   background: #4caf50 !important;
   color: white !important;
   cursor: pointer !important;
   margin: 10px auto !important;
   display: block !important;
+  font-size: 16px !important;
+  min-width: 200px !important;
+  touch-action: manipulation;
 }
 
 #html5-qrcode-button-camera-stop {
   background: #f44336 !important;
+}
+
+/* Reader dashboard section fix for small devices */
+#reader__dashboard_section {
+  padding: 10px !important;
+  border-top: 1px solid #eee !important;
+  margin-top: 10px !important;
+}
+
+#reader__dashboard_section_csr button {
+  touch-action: manipulation;
 }
 
 /* Debug Button */
@@ -527,19 +590,22 @@
 
 #test-barcode-input {
   width: 100%;
-  padding: 8px;
+  padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 16px;
 }
 
 #test-barcode-form button {
   background: #4caf50;
   color: white;
   border: none;
-  padding: 8px 12px;
+  padding: 12px;
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
+  font-size: 16px;
+  min-height: 50px;
 }
 
 #test-barcode-form button:hover {
@@ -550,13 +616,25 @@
   background: #f44336;
   color: white;
   border: none;
-  padding: 8px 12px;
+  padding: 12px;
   border-radius: 4px;
   cursor: pointer;
   margin-top: 10px;
   width: 100%;
+  font-size: 16px;
+  min-height: 50px;
 }
 
 #close-debug-panel:hover {
   background: #d32f2f;
+}
+
+/* Fix any potential z-index issues with the scanner overlay */
+div:has(> #reader) {
+  z-index: 1001 !important;
+}
+
+/* Target the QR Box viewfinder */
+#qr-shaded-region {
+  border-width: 50px !important;
 }

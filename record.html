@@ -76,10 +76,22 @@
 
     <!-- Scanner Modal -->
     <div id="scanner-container" class="scanner-container" style="display: none;">
+        <h3>Scan Barcode/QR Code</h3>
         <div id="reader"></div>
+        <button id="test-barcode-btn" class="debug-btn">
+            <i class="fas fa-keyboard"></i> Test Barcode
+        </button>
         <button id="close-scanner" class="close-scanner-btn">
             <i class="fas fa-times"></i> Close Scanner
         </button>
+        <div id="debug-panel" style="display: none;">
+            <h4>Test Barcode</h4>
+            <form id="test-barcode-form">
+                <input type="text" id="test-barcode-input" placeholder="Enter barcode manually">
+                <button type="submit">Test Search</button>
+            </form>
+            <button id="close-debug-panel">Close</button>
+        </div>
     </div>
 
     <!-- Load Firebase Configuration and Scripts Using ES Modules -->
@@ -319,6 +331,27 @@
                         // For debugging, automatically try the sample product after 3 seconds
                         // Uncomment the following line if you want to test the callback
                         // setTimeout(() => window._scannerDebug.triggerCallback(), 3000);
+
+                        // Initialize test barcode functionality
+                        try {
+                            if (typeof setupTestBarcodeUI === 'function') {
+                                setupTestBarcodeUI();
+                                console.log("✅ Test barcode UI initialized");
+                            } else {
+                                console.log("setupTestBarcodeUI function not available yet");
+                                // Try again after a delay
+                                setTimeout(() => {
+                                    if (typeof setupTestBarcodeUI === 'function') {
+                                        setupTestBarcodeUI();
+                                        console.log("✅ Test barcode UI initialized (delayed)");
+                                    } else {
+                                        console.error("❌ setupTestBarcodeUI function not available after delay");
+                                    }
+                                }, 1500);
+                            }
+                        } catch (err) {
+                            console.error("❌ Error initializing test barcode UI:", err);
+                        }
                     } catch (err) {
                         console.error('❌ Failed to start scanner:', err);
                         scannerContainer.style.display = 'none';

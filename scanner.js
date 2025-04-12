@@ -758,4 +758,70 @@ export async function testBarcodeSearch(barcode) {
 
 // Make sure functions are globally available
 window.testBarcodeSearch = testBarcodeSearch;
-window.showNotification = showNotification; 
+window.showNotification = showNotification;
+
+// Setup test barcode functionality
+export function setupTestBarcodeUI() {
+    const testBarcodeBtn = document.getElementById('test-barcode-btn');
+    const debugPanel = document.getElementById('debug-panel');
+    const testBarcodeForm = document.getElementById('test-barcode-form');
+    const closeDebugPanel = document.getElementById('close-debug-panel');
+    const testBarcodeInput = document.getElementById('test-barcode-input');
+
+    if (!testBarcodeBtn || !debugPanel || !testBarcodeForm || !closeDebugPanel) {
+        console.log("Test barcode UI elements not found");
+        return;
+    }
+
+    // Toggle debug panel
+    testBarcodeBtn.addEventListener('click', () => {
+        debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+        if (debugPanel.style.display === 'block') {
+            testBarcodeInput.focus();
+        }
+    });
+
+    // Close debug panel
+    closeDebugPanel.addEventListener('click', () => {
+        debugPanel.style.display = 'none';
+    });
+
+    // Handle form submission
+    testBarcodeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const barcode = testBarcodeInput.value.trim();
+
+        if (!barcode) {
+            showNotification('Please enter a barcode to test', 'warning');
+            return;
+        }
+
+        showNotification(`Testing barcode: ${barcode}`, 'info');
+
+        // Get the onProductFound callback from the page
+        const currentPage = window.location.pathname.includes('record.html') ? 'record' :
+            window.location.pathname.includes('add-product.html') ? 'add-product' : 'unknown';
+
+        try {
+            await barcodeScanner.handleScan(barcode, null);
+            testBarcodeInput.value = '';
+            debugPanel.style.display = 'none';
+        } catch (error) {
+            console.error('Error testing barcode:', error);
+            showNotification('Error testing barcode: ' + error.message, 'error');
+        }
+    });
+
+    console.log("✅ Test barcode UI functionality set up");
+}
+
+// Initialize test barcode UI when the scanner is initialized
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait a moment to ensure DOM is fully loaded
+    setTimeout(() => {
+        setupTestBarcodeUI();
+    }, 1000);
+});
+
+// Make available globally
+window.setupTestBarcodeUI = setupTestBarcodeUI; 
