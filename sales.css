@@ -103,7 +103,7 @@ h1 {
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Table Container */
+/* Table Container with Scrolling */
 .table-container {
   width: 100%;
   flex-grow: 1;
@@ -116,6 +116,32 @@ h1 {
   text-align: center;
   margin-bottom: 20px;
   box-sizing: border-box; /* Include padding in width calculation */
+  max-height: 60vh; /* Set maximum height to 60% of viewport height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #ccc #f0f0f0; /* Firefox */
+  scroll-behavior: smooth; /* Add smooth scrolling */
+}
+
+/* Scrollbar styling for Chrome, Edge, and Safari */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* For horizontal scrollbar */
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 8px;
+  border: 2px solid #f0f0f0;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background-color: #aaa;
 }
 
 table {
@@ -282,115 +308,117 @@ tr.date-separator td {
 /* Responsive Design - Desktop (1200px and above) */
 @media (min-width: 1200px) {
   .container {
-    width: 90%;
-    padding: 30px;
+    max-width: 1400px;
+    padding: 25px;
   }
 
   .table-container {
-    padding: 1.5rem;
+    max-height: 65vh; /* Larger height on bigger screens */
+    padding: 20px;
   }
 
   .summary-card {
-    max-width: 45%;
+    padding: 20px;
   }
 }
 
 /* Responsive Design - Laptop (992px to 1199px) */
 @media (min-width: 992px) and (max-width: 1199px) {
   .container {
-    width: 90%;
+    max-width: 1100px;
   }
 
   .table-container {
-    padding: 1.2rem;
+    max-height: 65vh;
+    padding: 15px;
   }
 
   .summary-card {
-    max-width: 45%;
+    min-width: 250px;
   }
 }
 
 /* Responsive Design - Tablet (768px to 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
   .container {
-    width: 90%;
+    max-width: 900px;
     padding: 20px;
   }
 
   .table-container {
-    padding: 1rem;
-    width: 96%;
+    max-height: 60vh;
+    padding: 15px;
   }
 
   .navigation-buttons {
-    grid-template-columns: repeat(3, 1fr);
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
   }
 }
 
 /* Responsive Design - Mobile (576px to 767px) */
 @media (min-width: 576px) and (max-width: 767px) {
   .container {
-    width: 95%;
+    max-width: 100%;
     padding: 15px;
   }
 
   .table-container {
-    padding: 0.8rem;
-    width: 100%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-height: 58vh;
+    padding: 12px;
   }
 
   .navigation-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
   }
 
   .summary {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .summary-card {
-    width: 95%;
-    max-width: none;
+    flex: 1 1 250px;
+    min-width: 0;
   }
 }
 
 /* Responsive Design - Small Mobile (below 576px) */
 @media (max-width: 575px) {
   .container {
-    width: 95%;
-    padding: 10px;
+    padding: 12px;
+    width: 100%;
+    max-width: 100%;
     border-width: 1px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
   }
 
   h1 {
-    font-size: 1.8rem;
-    border-width: 1px;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+    font-size: 1.5rem;
+    padding: 0.6rem 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .table-container {
-    padding: 0.5rem;
-    border-width: 1px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 100%;
+    padding: 8px;
+    max-height: 55vh; /* Slightly smaller for mobile */
+    border-radius: 6px;
   }
 
   .navigation-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
   }
 
   th,
   td {
-    padding: 0.5rem;
-    font-size: 0.8rem;
-    border-width: 1px;
+    padding: 6px;
+    font-size: 0.75rem;
   }
 
   .summary {
@@ -399,24 +427,18 @@ tr.date-separator td {
   }
 
   .summary-card {
-    width: 93%;
-    max-width: none;
-    padding: 0.8rem;
-    border-width: 1px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    padding: 12px;
+    min-width: 0;
   }
 
   .delete-btn {
-    padding: 0.3rem 0.5rem;
+    padding: 4px 8px;
     font-size: 0.7rem;
-    border-width: 1px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
   tr.date-separator td {
-    padding: 0.4rem;
-    font-size: 0.8rem;
-    border-width: 1px;
+    padding: 8px 5px;
   }
 
   .date-header {
@@ -425,14 +447,14 @@ tr.date-separator td {
   }
 
   .download-day-btn {
-    margin-top: 5px;
     padding: 4px 8px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    width: 100%;
   }
 
   .download-btn {
-    font-size: 0.85rem;
-    padding: 6px 12px;
+    padding: 8px;
+    font-size: 0.8rem;
   }
 }
 
