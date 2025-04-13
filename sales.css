@@ -409,8 +409,8 @@ tr.date-separator td {
   }
 
   .navigation-buttons {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     justify-content: center;
     gap: 8px;
   }
@@ -427,7 +427,7 @@ tr.date-separator td {
   }
 
   .summary-card {
-    width: 100%;
+    width: 93%;
     padding: 12px;
     min-width: 0;
   }
@@ -449,7 +449,7 @@ tr.date-separator td {
   .download-day-btn {
     padding: 4px 8px;
     font-size: 0.7rem;
-    width: 100%;
+    
   }
 
   .download-btn {
