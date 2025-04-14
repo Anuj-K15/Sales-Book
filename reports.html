@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BeerZone - Sales Reports</title>
+    <link rel="stylesheet" href="reports.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Date picker library -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Month select plugin for Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+    <!-- Add SheetJS library for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="navigation-buttons">
+            <button onclick="window.location.href='dashboard.html'" class="nav-btn">
+                <i class="fas fa-home"></i> Dashboard
+            </button>
+            <button onclick="window.location.href='record.html'" class="nav-btn">
+                <i class="fas fa-receipt"></i> Record Sales
+            </button>
+            <button onclick="window.location.href='sales.html'" class="nav-btn">
+                <i class="fas fa-chart-line"></i> View Sales
+            </button>
+            <button onclick="window.location.href='add-product.html'" class="nav-btn">
+                <i class="fas fa-plus"></i> Add Product
+            </button>
+            <button onclick="window.location.href='delete-product.html'" class="nav-btn">
+                <i class="fas fa-trash"></i> Delete Product
+            </button>
+            <button onclick="window.location.href='inventory.html'" class="nav-btn">
+                <i class="fas fa-boxes"></i> Inventory
+            </button>
+        </div>
+
+        <h1>Sales Reports</h1>
+
+        <!-- Time Period Selector -->
+        <div class="time-selector">
+            <button class="time-btn active" data-target="daily-report">
+                <i class="fas fa-calendar-day"></i> Daily Reports
+            </button>
+            <button class="time-btn" data-target="monthly-report">
+                <i class="fas fa-calendar-alt"></i> Monthly Reports
+            </button>
+            <button class="time-btn" data-target="yearly-report">
+                <i class="fas fa-calendar-check"></i> Yearly Reports
+            </button>
+        </div>
+
+        <!-- Daily Reports Section -->
+        <section id="daily-report" class="report-section active">
+            <h2><i class="fas fa-calendar-day"></i> Daily Sales Reports</h2>
+
+            <!-- Date Picker -->
+            <div class="date-picker-container">
+                <div class="date-picker-wrapper">
+                    <label for="daily-date-picker">Select Date:</label>
+                    <input type="text" id="daily-date-picker" class="date-picker" placeholder="Select a date">
+                    <button id="daily-date-search" class="search-date-btn">
+                        <i class="fas fa-search"></i> View Report
+                    </button>
+                </div>
+                <button id="export-daily-all" class="export-all-btn">
+                    <i class="fas fa-file-export"></i> Export All Daily Reports
+                </button>
+            </div>
+
+            <!-- Reports Container -->
+            <div class="reports-container">
+                <div class="loading-message">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading daily reports...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Monthly Reports Section -->
+        <section id="monthly-report" class="report-section">
+            <h2><i class="fas fa-calendar-alt"></i> Monthly Sales Reports</h2>
+
+            <!-- Month Picker -->
+            <div class="date-picker-container">
+                <div class="date-picker-wrapper">
+                    <label for="monthly-date-picker">Select Month:</label>
+                    <input type="text" id="monthly-date-picker" class="month-picker" placeholder="Select a month">
+                    <button id="monthly-date-search" class="search-date-btn">
+                        <i class="fas fa-search"></i> View Report
+                    </button>
+                </div>
+                <button id="export-monthly-all" class="export-all-btn">
+                    <i class="fas fa-file-export"></i> Export All Monthly Reports
+                </button>
+            </div>
+
+            <!-- Reports Container -->
+            <div class="reports-container">
+                <div class="loading-message">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading monthly reports...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Yearly Reports Section -->
+        <section id="yearly-report" class="report-section">
+            <h2><i class="fas fa-calendar-check"></i> Yearly Sales Reports</h2>
+
+            <!-- Year Picker -->
+            <div class="date-picker-container">
+                <div class="date-picker-wrapper">
+                    <label for="yearly-date-picker">Select Year:</label>
+                    <input type="text" id="yearly-date-picker" class="year-picker" placeholder="Select a year">
+                    <button id="yearly-date-search" class="search-date-btn">
+                        <i class="fas fa-search"></i> View Report
+                    </button>
+                </div>
+                <button id="export-yearly-all" class="export-all-btn">
+                    <i class="fas fa-file-export"></i> Export All Yearly Reports
+                </button>
+            </div>
+
+            <!-- Reports Container -->
+            <div class="reports-container">
+                <div class="loading-message">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading yearly reports...</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Loading Firebase and modules -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="excel-export.js"></script>
+    <script type="module" src="reports.js"></script>
+</body>
+
+</html>

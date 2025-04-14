@@ -1,0 +1,488 @@
+/* BeerZone Reports Page Styles */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  line-height: 1.6;
+  background-color: #f9f9f9;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+.navigation-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.nav-btn {
+  background: #334;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.nav-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.time-selector {
+  display: flex;
+  margin-bottom: 30px;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.time-btn {
+  background: #fff;
+  color: #333;
+  border: 2px solid #ddd;
+  padding: 12px 20px;
+  border-radius: 50px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.time-btn:hover {
+  border-color: #4caf50;
+}
+
+.time-btn.active {
+  background: #4caf50;
+  color: white;
+  border-color: #4caf50;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.report-section {
+  display: none;
+  margin-bottom: 40px;
+}
+
+.report-section.active {
+  display: block;
+}
+
+.report-section h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #4caf50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-picker-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.date-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.date-picker-wrapper label {
+  font-weight: 500;
+  color: #555;
+}
+
+.date-picker,
+.month-picker,
+.year-picker {
+  padding: 10px 15px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  min-width: 200px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.date-picker:focus,
+.month-picker:focus,
+.year-picker:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.search-date-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.search-date-btn:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 3px 5px 0 rgba(0, 0, 0, 0.1);
+}
+
+.export-all-btn {
+  background: #334;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.export-all-btn:hover {
+  background: #445;
+  transform: translateY(-2px);
+  box-shadow: 3px 5px 0 rgba(0, 0, 0, 0.1);
+}
+
+.reports-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.report-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 5px 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+.report-date {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.report-stats {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+  padding: 0 10px;
+  border-right: 1px solid #eee;
+}
+
+.stat-item:last-child {
+  border-right: none;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #777;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-top: 5px;
+}
+
+.top-items {
+  margin-bottom: 20px;
+}
+
+.top-items h4 {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-items ul {
+  list-style: none;
+  padding-left: 10px;
+}
+
+.top-items li {
+  font-size: 14px;
+  color: #666;
+  padding: 5px 0;
+  position: relative;
+  padding-left: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-items li:not(:last-child) {
+  border-bottom: 1px dashed #eee;
+}
+
+.top-items li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #4caf50;
+}
+
+.report-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.export-btn {
+  padding: 8px 15px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.export-btn:hover {
+  background: #45a049;
+}
+
+.view-details-btn {
+  padding: 8px 15px;
+  background: #334;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.view-details-btn:hover {
+  background: #445;
+}
+
+.loading-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  grid-column: 1 / -1;
+}
+
+.loading-message i {
+  color: #4caf50;
+  font-size: 24px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  grid-column: 1 / -1;
+}
+
+.empty-state i {
+  font-size: 48px;
+  color: #ddd;
+  margin-bottom: 15px;
+}
+
+/* Flatpickr customization */
+.flatpickr-calendar {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.flatpickr-day.selected {
+  background: #4caf50;
+  border-color: #4caf50;
+}
+
+.flatpickr-day.selected:hover {
+  background: #45a049;
+}
+
+.flatpickr-day:hover {
+  background: #f0f8f0;
+}
+
+.flatpickr-months .flatpickr-month {
+  background: #4caf50;
+  color: white;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  color: white;
+}
+
+.flatpickr-current-month input.cur-year {
+  color: white;
+}
+
+.flatpickr-weekdays {
+  background: #4caf50;
+}
+
+span.flatpickr-weekday {
+  color: rgba(255, 255, 255, 0.9);
+  background: #4caf50;
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  color: rgba(255, 255, 255, 0.9);
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .time-selector {
+    flex-direction: column;
+    width: 100%;
+  }
+  .time-btn {
+    width: 100%;
+  }
+  .reports-container {
+    grid-template-columns: 1fr;
+  }
+  .navigation-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  .nav-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  h1 {
+    font-size: 24px;
+  }
+  .date-picker-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .date-picker-wrapper {
+    width: 100%;
+  }
+  .date-picker,
+  .month-picker,
+  .year-picker,
+  .search-date-btn {
+    width: 100%;
+  }
+  .export-all-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 15px;
+  }
+  .report-stats {
+    flex-direction: column;
+  }
+  .stat-item {
+    flex: 1 1 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .stat-item:last-child {
+    margin-bottom: 0;
+  }
+  .report-actions {
+    flex-direction: column;
+  }
+  .nav-btn {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  h1 {
+    font-size: 22px;
+  }
+}
