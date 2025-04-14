@@ -111,9 +111,7 @@ export async function loadSales() {
                     <td colspan="6" style="text-align:center; font-weight:bold; background:#f3545a; color:white; padding:10px; border-top: 2px solid black;">
                         <div class="date-header">
                             <span>📅 ${saleDate} - Total Sale: ₹${dailyTotals[saleDate].toFixed(2)}</span>
-                            <button class="download-day-btn" onclick="exportSalesToExcel('${saleDate}')">
-                                <i class="fas fa-download"></i> Download
-                            </button>
+                            
                         </div>
                     </td>
                 `;
