@@ -25,6 +25,12 @@ body {
   box-sizing: border-box; /* Include padding in width calculation */
 }
 
+.navigation-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
 /* Heading styles */
 h1 {
   font-size: clamp(1.8rem, 4vw, 3rem);
@@ -58,13 +64,7 @@ h2 i {
   color: #f3545a;
 }
 
-/* Navigation Buttons */
-.navigation-buttons {
-  display: f;
 
-  gap: 15px;
-  margin-bottom: 20px;
-}
 
 .nav-btn {
   background-color: #4caf50;
@@ -471,7 +471,7 @@ tr:hover {
   .navigation-buttons {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
+    gap: 8px;
     margin-bottom: 20px;
   }
 
@@ -519,7 +519,7 @@ tr:hover {
   .time-selector {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
+    gap: 8px;
     margin-bottom: 20px;
   }
 }

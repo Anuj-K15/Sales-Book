@@ -33,7 +33,7 @@ body {
 .navigation-buttons {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
+  gap: 8px;
   margin-bottom: 20px;
 }
 
@@ -543,5 +543,12 @@ span.flatpickr-weekday {
   h1 {
     font-size: 1.6rem;
     padding: 10px;
+  }
+
+  .navigation-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
   }
 }
