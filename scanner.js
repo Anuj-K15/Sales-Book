@@ -622,6 +622,32 @@ class BarcodeScanner {
         }
 
         try {
+            // First, check if the toggleFlash method exists on the scanner instance
+            if (!this.html5QrcodeScanner.getHtml5QrcodeScanner ||
+                !this.html5QrcodeScanner.getHtml5QrcodeScanner().getQrCode ||
+                !this.html5QrcodeScanner.getHtml5QrcodeScanner().getQrCode().torchCapability) {
+
+                console.warn("Flashlight toggle not supported on this device/browser");
+                window.showNotification?.("Flashlight not supported on this device", "warning");
+
+                // Update button state to indicate flashlight is not available
+                const flashBtn = document.getElementById('toggle-flash-btn');
+                if (flashBtn) {
+                    flashBtn.innerHTML = '<i class="fas fa-bolt"></i> Flash Not Available';
+                    flashBtn.disabled = true;
+                    flashBtn.classList.add('disabled');
+                }
+                return;
+            }
+
+            // Check if torch capability is available
+            const torchCapability = await this.html5QrcodeScanner.getHtml5QrcodeScanner().getQrCode().torchCapability();
+            if (!torchCapability) {
+                console.warn("Torch not supported on this device/camera");
+                window.showNotification?.("Flashlight not available on this camera", "warning");
+                return;
+            }
+
             // Get current torch status if not forcing a specific state
             const isTorchOn = forceState !== null ? !forceState : await this.html5QrcodeScanner.getTorchState();
 
@@ -658,10 +684,16 @@ class BarcodeScanner {
                 }
             } else {
                 console.warn("Flashlight toggle not supported or failed");
+                window.showNotification?.("Flashlight control not available", "warning");
             }
         } catch (error) {
             console.error("Error toggling flashlight:", error);
-            window.showNotification?.("Could not control flashlight: " + error.message, "warning");
+            // Hide the flash button if it exists since it's not working
+            const flashBtn = document.getElementById('toggle-flash-btn');
+            if (flashBtn) {
+                flashBtn.style.display = 'none';
+            }
+            window.showNotification?.("Flashlight not available on this device", "warning");
         }
     }
 }
