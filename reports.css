@@ -28,6 +28,7 @@ body {
   box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.2);
   margin: 20px auto;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .navigation-buttons {
@@ -520,8 +521,10 @@ span.flatpickr-weekday {
 
 @media (max-width: 576px) {
   .container {
-    width: 95%;
-    padding: 15px;
+    width: 96%;
+    padding: 10px;
+    border-width: 1px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   .navigation-buttons {
