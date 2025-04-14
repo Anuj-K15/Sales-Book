@@ -432,11 +432,11 @@ tr:hover {
   .charts-row {
     grid-template-columns: 1fr;
   }
-  
+
   .chart-container {
     margin-bottom: 20px;
   }
-  
+
   canvas {
     max-height: 300px;
   }
@@ -446,17 +446,17 @@ tr:hover {
   .metrics-grid {
     grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
   }
-  
+
   .time-selector {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .time-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .chart-container {
     padding: 15px;
   }
@@ -467,49 +467,59 @@ tr:hover {
     width: 95%;
     padding: 15px;
   }
-  
+
   .navigation-buttons {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
   }
-  
+
   .metrics-grid {
     grid-template-columns: 1fr;
     gap: 15px;
   }
-  
+
   .metric-card {
     padding: 15px;
   }
-  
+
   .metric-icon {
     width: 40px;
     height: 40px;
     margin-right: 10px;
   }
-  
+
   .metric-icon i {
     font-size: 18px;
   }
-  
+
   .metric-value {
     font-size: 24px;
   }
-  
+
   .download-report-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .chart-container {
     padding: 10px;
   }
-  
+
   .chart-container h2 {
     font-size: 1rem;
   }
-  
+
   h1 {
     font-size: 1.6rem;
     padding: 10px;
+  }
+
+  .time-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
   }
 }
