@@ -17,7 +17,7 @@ body {
   max-width: 1400px;
   padding: 25px;
   background: rgba(255, 255, 255, 0.95);
-  /* border: 1px solid #222; */
+  border: 2px solid #222;
   border-radius: 10px;
   box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.2);
   margin: 20px auto;
@@ -60,8 +60,8 @@ h2 i {
 
 /* Navigation Buttons */
 .navigation-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  display: f;
+
   gap: 15px;
   margin-bottom: 20px;
 }
@@ -464,10 +464,8 @@ tr:hover {
 
 @media (max-width: 575px) {
   .container {
-    width: 96%;
-    padding: 10px;
-    border-width: 1px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 95%;
+    padding: 15px;
   }
 
   .navigation-buttons {
