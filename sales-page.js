@@ -40,6 +40,18 @@ export function getTodayIST() {
     return `${year}-${month}-${day}`; // YYYY-MM-DD format
 }
 
+// Function to get date from n days ago in YYYY-MM-DD format
+function getDateDaysAgo(days) {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
 // ✅ Function to get current month in IST
 function getCurrentMonthIST() {
     return new Date().toLocaleString('en-GB', { timeZone: 'Asia/Kolkata', month: 'numeric' }) - 1;
@@ -76,6 +88,9 @@ export async function loadSales() {
         const today = getTodayIST();
         const currentMonth = getCurrentMonthIST();
 
+        // Get dates for the last 3 days
+        const threeDaysAgo = getDateDaysAgo(3);
+
         tableBody.innerHTML = "";
 
         if (snapshot.empty) {
@@ -83,23 +98,40 @@ export async function loadSales() {
             return;
         }
 
-        // ✅ First pass: Calculate daily totals
+        // ✅ First pass: Calculate daily totals for last 3 days only
         const dailyTotals = {};
+        const validSales = [];
+
         snapshot.forEach((docSnap) => {
             const sale = docSnap.data();
             const saleDate = sale.date;
 
-            if (!dailyTotals[saleDate]) {
-                dailyTotals[saleDate] = 0;
-            }
-            dailyTotals[saleDate] += sale.totalAmount;
+            // Only include sales from the last 3 days
+            if (saleDate >= threeDaysAgo) {
+                validSales.push({
+                    id: docSnap.id,
+                    ...sale
+                });
 
-            if (saleDate === today) todayTotal += sale.totalAmount;
-            if (new Date(saleDate).getMonth() === currentMonth) monthTotal += sale.totalAmount;
+                if (!dailyTotals[saleDate]) {
+                    dailyTotals[saleDate] = 0;
+                }
+                dailyTotals[saleDate] += sale.totalAmount;
+
+                if (saleDate === today) todayTotal += sale.totalAmount;
+                if (new Date(saleDate).getMonth() === currentMonth) monthTotal += sale.totalAmount;
+            }
         });
-        // ✅ Second pass: Create table rows with pre-calculated totals
-        snapshot.forEach((docSnap) => {
-            const sale = docSnap.data();
+
+        if (validSales.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='6' style='text-align: center;'>No sales data available for the last 3 days</td></tr>";
+            todayTotalElement.textContent = `₹0.00`;
+            monthTotalElement.textContent = `₹${monthTotal.toFixed(2)}`;
+            return;
+        }
+
+        // ✅ Second pass: Create table rows with pre-calculated totals for last 3 days
+        validSales.forEach((sale) => {
             const saleDate = sale.date;
             const formattedTime = sale.time;
 
@@ -127,7 +159,7 @@ export async function loadSales() {
                 <td>₹${sale.totalAmount.toFixed(2)}</td>
                 <td>${saleDate} ${formattedTime}</td>
                 <td>${sale.paymentMethod}</td>
-                <td><button class="delete-btn" data-id="${docSnap.id}">Delete</button></td>
+                <td><button class="delete-btn" data-id="${sale.id}">Delete</button></td>
             `;
             tableBody.appendChild(tr);
         });
@@ -139,7 +171,7 @@ export async function loadSales() {
             button.addEventListener("click", () => deleteSale(button.dataset.id));
         });
 
-        console.log("✅ Sales loaded successfully.");
+        console.log("✅ Sales loaded successfully (showing only last 3 days).");
     } catch (error) {
         console.error("❌ Error loading sales:", error);
     }
