@@ -3,7 +3,7 @@ body {
   font-family: "Poppins", sans-serif;
   margin: 0;
   padding: 0;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f9d423, #ff4e50);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,9 +16,10 @@ body {
   width: 93%;
   max-width: 1400px;
   padding: 25px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #222;
   border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.2);
   margin: 20px auto;
   overflow: hidden; /* Prevent content overflow */
   box-sizing: border-box; /* Include padding in width calculation */
@@ -30,9 +31,13 @@ h1 {
   margin-bottom: 2rem;
   text-align: center;
   text-transform: uppercase;
-  color: #333;
+  color: #fff;
+  background: linear-gradient(90deg, #ff6b6b, #e63946);
   padding: clamp(0.8rem, 3vw, 1rem) clamp(1rem, 5vw, 2rem);
-  border-bottom: 2px solid #4caf50;
+  border: 2px solid #000;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
   width: fit-content;
   margin-left: auto;
   margin-right: auto;
@@ -41,14 +46,16 @@ h1 {
 h2 {
   font-size: clamp(1.3rem, 3vw, 1.6rem);
   color: #333;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f3545a;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 h2 i {
-  color: #4caf50;
+  color: #f3545a;
 }
 
 /* Navigation Buttons */
@@ -62,13 +69,13 @@ h2 i {
 .nav-btn {
   background-color: #4caf50;
   color: white;
-  border: none;
+  border: 1px solid #3d8b40;
   padding: clamp(8px, 2vw, 12px) clamp(10px, 3vw, 24px);
   font-size: clamp(14px, 2vw, 16px);
-  font-weight: 500;
+  font-weight: bold;
   cursor: pointer;
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -80,12 +87,12 @@ h2 i {
 .nav-btn:hover {
   background-color: #45a049;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .nav-btn:active {
   transform: translateY(1px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Time Period Selector */
@@ -93,28 +100,36 @@ h2 i {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 15px;
   margin-bottom: 30px;
 }
 
 .time-btn {
-  background-color: #f0f0f0;
+  background-color: #fff;
   color: #333;
-  border: none;
+  border: 2px solid #ddd;
   padding: 10px 20px;
   font-size: 14px;
   border-radius: 30px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
 .time-btn:hover {
-  background-color: #e0e0e0;
+  border-color: #4caf50;
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .time-btn.active {
   background-color: #4caf50;
   color: white;
+  border-color: #3d8b40;
 }
 
 /* Metrics Grid */
@@ -127,8 +142,9 @@ h2 i {
 
 .metric-card {
   background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
   padding: 20px;
   display: flex;
   align-items: flex-start;
@@ -139,7 +155,7 @@ h2 i {
 
 .metric-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.1);
 }
 
 .metric-icon {
@@ -151,6 +167,7 @@ h2 i {
   justify-content: center;
   margin-right: 15px;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .metric-icon i {
@@ -167,8 +184,8 @@ h2 i {
 .metric-content h3 {
   margin: 0 0 5px 0;
   font-size: 16px;
-  font-weight: 500;
-  color: #666;
+  font-weight: 600;
+  color: #444;
 }
 
 .metric-value {
@@ -179,7 +196,7 @@ h2 i {
 }
 
 .metric-label {
-  color: #888;
+  color: #666;
   margin: 5px 0 0 0;
   font-size: 14px;
 }
@@ -188,52 +205,54 @@ h2 i {
 .download-report-btn {
   background-color: #4caf50;
   color: white;
-  border: none;
+  border: 1px solid #3d8b40;
   border-radius: 6px;
   padding: 10px 15px;
   margin-top: 0;
   cursor: pointer;
   font-size: 0.85rem;
+  font-weight: bold;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: background-color 0.3s, transform 0.2s;
-  width: 100%;
-  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
 .download-report-btn:hover {
   background-color: #45a049;
   transform: translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .download-report-btn:active {
-  transform: translateY(0);
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
 }
 
 .download-report-btn i {
-  font-size: 0.85rem;
+  font-size: 14px;
 }
 
-/* Card color variations */
+/* Icon colors */
 .total-sales .metric-icon {
-  background: linear-gradient(45deg, #4caf50, #8bc34a);
+  background-color: #4caf50;
 }
 
 .order-count .metric-icon {
-  background: linear-gradient(45deg, #2196f3, #03a9f4);
+  background-color: #2196f3;
 }
 
 .average-order .metric-icon {
-  background: linear-gradient(45deg, #ff9800, #ffc107);
+  background-color: #ff9800;
 }
 
 .inventory-alert .metric-icon {
-  background: linear-gradient(45deg, #f44336, #ff5722);
+  background-color: #f44336;
 }
 
 .download-report .metric-icon {
-  background: linear-gradient(45deg, #673ab7, #9c27b0);
+  background-color: #9c27b0;
 }
 
 .download-report .metric-content h3 {
@@ -241,16 +260,14 @@ h2 i {
 }
 
 .download-report .metric-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 /* Charts Row */
 .charts-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 25px;
   margin-bottom: 30px;
 }
 
@@ -259,16 +276,23 @@ h2 i {
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   padding: 20px;
-  height: 300px; /* Fixed height for chart containers */
+  height: 300px;
   position: relative;
   overflow: hidden;
 }
 
+.chart-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.1);
+}
+
 .chart-container h2 {
+  font-size: 1.2rem;
+  color: #333;
   margin-top: 0;
+  margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
-  font-size: 1.2rem;
 }
 
 /* Section headers */
@@ -286,33 +310,38 @@ h2 i {
 .view-all-btn {
   background-color: #4caf50;
   color: white;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid #3d8b40;
   padding: 8px 15px;
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.3s;
+  font-weight: bold;
+  border-radius: 4px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
 }
 
 .view-all-btn:hover {
-  background-color: #45a049;
+  background-color: #445;
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Table Styles */
+/* Table Container */
 .table-container {
   width: 100%;
-  overflow-x: auto;
-  margin-bottom: 30px;
   background: white;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  box-sizing: border-box; /* Include padding in width calculation */
+  padding: 10px;
+  overflow-x: auto;
+  margin-bottom: 25px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px; /* Ensures table doesn't get too narrow */
+  border-spacing: 0;
 }
 
 thead {
@@ -320,18 +349,16 @@ thead {
 }
 
 th {
-  text-align: left;
   padding: 12px 15px;
+  text-align: left;
   font-weight: 600;
+  font-size: 0.9rem;
   color: #333;
-  font-size: clamp(0.85rem, 2vw, 0.95rem);
-  border-bottom: 2px solid #eee;
 }
 
 td {
   padding: 10px 15px;
-  border-bottom: 1px solid #eee;
-  font-size: clamp(0.85rem, 2vw, 0.95rem);
+  border-top: 1px solid #eee;
 }
 
 tr:hover {
@@ -340,51 +367,58 @@ tr:hover {
 
 .loading-row td {
   text-align: center;
+  color: #888;
   padding: 20px;
-  color: #777;
+  font-style: italic;
 }
 
-/* Status indicators */
+/* Status Labels */
 .status {
-  display: inline-block;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: bold;
+  text-align: center;
+  display: inline-block;
 }
 
 .status-in-stock {
-  background-color: #e6f7e6;
+  background-color: #e8f5e9;
   color: #2e7d32;
-  border: 1px solid #2e7d32;
+  border: 1px solid #c8e6c9;
 }
 
 .status-low-stock {
   background-color: #fff8e1;
-  color: #ff8f00;
-  border: 1px solid #ff8f00;
+  color: #f57f17;
+  border: 1px solid #ffecb3;
 }
 
 .status-out-of-stock {
   background-color: #ffebee;
   color: #c62828;
-  border: 1px solid #c62828;
+  border: 1px solid #ffcdd2;
 }
 
-/* Action Button in Tables */
+/* Action Buttons */
 .action-btn {
-  background-color: #4caf50;
-  color: white;
-  border: none;
   padding: 5px 10px;
+  border: 1px solid;
   border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
 .action-btn:hover {
-  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Recent Transactions and Low Stock sections */
@@ -393,89 +427,89 @@ tr:hover {
   margin-bottom: 30px;
 }
 
-/* Responsive Design */
+/* Mobile Responsiveness */
 @media (max-width: 992px) {
   .charts-row {
     grid-template-columns: 1fr;
-    gap: 30px;
   }
-
+  
   .chart-container {
-    height: 250px;
-    margin-bottom: 0;
+    margin-bottom: 20px;
+  }
+  
+  canvas {
+    max-height: 300px;
   }
 }
 
 @media (max-width: 768px) {
   .metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
   }
-
+  
   .time-selector {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 10px;
+    flex-direction: column;
+    width: 100%;
   }
-
+  
   .time-btn {
-    flex: 0 0 auto;
+    width: 100%;
+    justify-content: center;
   }
-
+  
   .chart-container {
-    height: 220px;
+    padding: 15px;
   }
 }
 
 @media (max-width: 576px) {
   .container {
+    width: 95%;
     padding: 15px;
-    width: 100%;
-    max-width: 100%;
   }
-
+  
   .navigation-buttons {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
+    flex-direction: column;
   }
-
+  
   .metrics-grid {
     grid-template-columns: 1fr;
     gap: 15px;
   }
-
+  
   .metric-card {
     padding: 15px;
-    min-height: auto;
   }
-
+  
   .metric-icon {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
   }
-
+  
+  .metric-icon i {
+    font-size: 18px;
+  }
+  
   .metric-value {
     font-size: 24px;
   }
-
+  
   .download-report-btn {
     width: 100%;
-    padding: 10px;
-    margin-top: 0;
+    justify-content: center;
   }
-
-  .time-selector {
-    justify-content: flex-start;
-  }
-
+  
   .chart-container {
-    height: 200px;
-    padding: 15px;
+    padding: 10px;
   }
-
+  
   .chart-container h2 {
     font-size: 1rem;
-    padding-bottom: 8px;
-    margin-bottom: 5px;
+  }
+  
+  h1 {
+    font-size: 1.6rem;
+    padding: 10px;
   }
 }
