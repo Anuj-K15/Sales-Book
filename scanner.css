@@ -466,3 +466,70 @@ div:has(> #reader) {
   border: 1px solid #ddd !important;
   border-radius: 5px !important;
 }
+
+/* Scanner container styling */
+#scanner-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+/* Flashlight button styling */
+.flash-button-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.flash-toggle-btn {
+  background-color: #2b3649;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.flash-toggle-btn i {
+  margin-right: 5px;
+}
+
+.flash-toggle-btn.active {
+  background-color: #ffa500;
+  color: #000;
+}
+
+.flash-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.flash-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .flash-toggle-btn {
+    padding: 10px 18px;
+    font-size: 1rem;
+  }
+}

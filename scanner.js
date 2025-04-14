@@ -116,6 +116,40 @@ class BarcodeScanner {
 
             this.isScanning = true;
             console.log("✅ Scanner started successfully");
+
+            // Automatically turn on flashlight if supported (after a small delay to ensure camera is ready)
+            setTimeout(() => {
+                this.toggleFlashlight(true);
+            }, 1000);
+
+            // Add a flash toggle button if not already present
+            const addFlashToggleButton = () => {
+                if (!document.getElementById('toggle-flash-btn')) {
+                    const scannerContainer = document.querySelector('.scanner-container') || readerElement.parentElement;
+                    if (scannerContainer) {
+                        const flashBtn = document.createElement('button');
+                        flashBtn.id = 'toggle-flash-btn';
+                        flashBtn.className = 'flash-toggle-btn';
+                        flashBtn.innerHTML = '<i class="fas fa-bolt"></i> Toggle Flash';
+                        flashBtn.onclick = () => this.toggleFlashlight();
+
+                        const buttonContainer = document.createElement('div');
+                        buttonContainer.className = 'flash-button-container';
+                        buttonContainer.appendChild(flashBtn);
+
+                        // Insert after reader but before close button
+                        const closeBtn = scannerContainer.querySelector('.close-scanner-btn');
+                        if (closeBtn && closeBtn.parentElement) {
+                            closeBtn.parentElement.insertBefore(buttonContainer, closeBtn);
+                        } else {
+                            scannerContainer.appendChild(buttonContainer);
+                        }
+                    }
+                }
+            };
+
+            // Add the button after a delay to ensure DOM is ready
+            setTimeout(addFlashToggleButton, 1200);
         } catch (err) {
             console.error("❌ Error initializing scanner:", err);
             window.showNotification?.("Scanner error: " + (err.message || "Unknown error"), "error");
@@ -577,6 +611,57 @@ class BarcodeScanner {
             console.error("Error saving new product:", error);
             window.showNotification?.("Could not save product to database, but added to cart", "info");
             return null;
+        }
+    }
+
+    // Add a toggleFlashlight method to the BarcodeScanner class
+    async toggleFlashlight(forceState = null) {
+        if (!this.html5QrcodeScanner || !this.isScanning) {
+            console.log("Cannot toggle flashlight - scanner not running");
+            return;
+        }
+
+        try {
+            // Get current torch status if not forcing a specific state
+            const isTorchOn = forceState !== null ? !forceState : await this.html5QrcodeScanner.getTorchState();
+
+            // Only change state if needed
+            if (forceState === true && isTorchOn) {
+                console.log("Flashlight already on");
+                return;
+            }
+
+            if (forceState === false && !isTorchOn) {
+                console.log("Flashlight already off");
+                return;
+            }
+
+            console.log(`${isTorchOn ? 'Turning off' : 'Turning on'} flashlight...`);
+
+            // Apply the change
+            const success = await this.html5QrcodeScanner.toggleFlash();
+
+            if (success) {
+                console.log(`Flashlight ${isTorchOn ? 'turned off' : 'turned on'} successfully`);
+                window.showNotification?.(`Flashlight ${isTorchOn ? 'off' : 'on'}`, "info");
+
+                // Update button icon if it exists
+                const flashBtn = document.getElementById('toggle-flash-btn');
+                if (flashBtn) {
+                    if (isTorchOn) {
+                        flashBtn.innerHTML = '<i class="fas fa-bolt"></i> Turn On Flash';
+                        flashBtn.classList.remove('active');
+                    } else {
+                        flashBtn.innerHTML = '<i class="fas fa-bolt"></i> Turn Off Flash';
+                        flashBtn.classList.add('active');
+                    }
+                }
+            } else {
+                console.warn("Flashlight toggle not supported or failed");
+            }
+        } catch (error) {
+            console.error("Error toggling flashlight:", error);
+            window.showNotification?.("Could not control flashlight: " + error.message, "warning");
         }
     }
 }
