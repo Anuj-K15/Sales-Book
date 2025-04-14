@@ -77,10 +77,8 @@
     <div id="scanner-container" class="scanner-container" style="display: none;">
         <h3>Scan Product</h3>
         <div id="reader"></div>
-        <!-- Flash button will be added here dynamically if supported -->
-        <div class="scanner-controls"
-            style="display: flex; flex-direction: column; align-items: center; width: 100%; margin-top: 10px;">
-            <button id="close-scanner" class="close-scanner-btn">
+        <div style="display: flex; justify-content: center; margin-top: 5px;">
+            <button id="close-scanner" class="close-scanner-btn" style="width: 100%;">
                 <i class="fas fa-times"></i> Close Scanner
             </button>
         </div>
@@ -320,59 +318,6 @@
                         await barcodeScanner.initializeScanner('reader', window.handleScannedProductCallback);
                         console.log("✅ Scanner initialized successfully");
 
-                        // Add a flashlight toggle button if available on this device
-                        setTimeout(() => {
-                            try {
-                                // Check if we can access the inner scanner
-                                if (barcodeScanner.html5QrcodeScanner &&
-                                    barcodeScanner.html5QrcodeScanner.getHtml5QrcodeScanner &&
-                                    barcodeScanner.html5QrcodeScanner.getHtml5QrcodeScanner().getQrCode &&
-                                    barcodeScanner.html5QrcodeScanner.getHtml5QrcodeScanner().getQrCode().torchCapability) {
-
-                                    // Add torch button
-                                    const flashContainer = document.createElement('div');
-                                    flashContainer.className = 'flash-button-container';
-
-                                    const flashButton = document.createElement('button');
-                                    flashButton.id = 'toggle-flash-btn';
-                                    flashButton.className = 'flash-toggle-btn';
-                                    flashButton.innerHTML = '<i class="fas fa-bolt"></i> Toggle Flash';
-
-                                    flashButton.addEventListener('click', async () => {
-                                        try {
-                                            await barcodeScanner.toggleFlashlight();
-                                        } catch (err) {
-                                            console.error("Error toggling flashlight:", err);
-                                            flashButton.style.display = 'none';
-                                        }
-                                    });
-
-                                    flashContainer.appendChild(flashButton);
-
-                                    // Find a good place to insert the button
-                                    const closeBtn = document.getElementById('close-scanner');
-                                    const parent = closeBtn.parentElement;
-
-                                    // Insert before the close button
-                                    parent.insertBefore(flashContainer, closeBtn);
-
-                                    // Check if torch is actually available on the device
-                                    barcodeScanner.html5QrcodeScanner.getHtml5QrcodeScanner().getQrCode().torchCapability()
-                                        .then(capability => {
-                                            if (!capability) {
-                                                // Hide the button if torch is not supported
-                                                flashButton.style.display = 'none';
-                                            }
-                                        })
-                                        .catch(err => {
-                                            console.error("Error checking torch capability:", err);
-                                            flashButton.style.display = 'none';
-                                        });
-                                }
-                            } catch (err) {
-                                console.error("Could not set up flashlight button:", err);
-                            }
-                        }, 1000); // Wait for scanner to fully initialize
                     } catch (err) {
                         console.error('❌ Failed to start scanner:', err);
                         scannerContainer.style.display = 'none';
