@@ -1,6 +1,8 @@
 // Scanner functionality for BeerZone
 import { db } from "./firebase-config.js";
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { ref, get, child, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { rtdb } from "./firebase-config.js";
 
 class BarcodeScanner {
     constructor() {
@@ -211,7 +213,38 @@ class BarcodeScanner {
                     if (typeof window.addToCart === 'function') {
                         try {
                             console.log("Using direct addToCart function");
-                            window.addToCart(validatedProduct.id, validatedProduct.name, validatedProduct.price, null, 1);
+
+                            // Check inventory availability first
+                            const inventoryRef = ref(rtdb, `inventory/${validatedProduct.id}`);
+                            const snapshot = await get(inventoryRef);
+                            const inventoryData = snapshot.exists() ? snapshot.val() : { quantity: 0 };
+                            const availableQuantity = inventoryData.quantity || 0;
+
+                            if (availableQuantity <= 0) {
+                                window.showNotification?.(`${validatedProduct.name} is out of stock`, "error");
+                                return;
+                            }
+
+                            // Find if product is already in cart
+                            let existingQuantity = 0;
+                            if (window.cart) {
+                                const existingItem = window.cart.find(item => item.id === validatedProduct.id);
+                                if (existingItem) {
+                                    existingQuantity = existingItem.quantity;
+                                }
+                            }
+
+                            // Default quantity to add is 1
+                            const quantityToAdd = 1;
+
+                            // Check if adding would exceed inventory
+                            if (existingQuantity + quantityToAdd > availableQuantity) {
+                                window.showNotification?.(`Can't add more ${validatedProduct.name}. Only ${availableQuantity} available and you already have ${existingQuantity} in cart.`, "warning");
+                                return;
+                            }
+
+                            // If inventory allows, add to cart
+                            window.addToCart(validatedProduct.id, validatedProduct.name, validatedProduct.price, null, quantityToAdd);
                             console.log("✅ Product added via direct addToCart");
                             return;
                         } catch (cartError) {

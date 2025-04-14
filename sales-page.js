@@ -1,6 +1,10 @@
 // ✅ Import Firestore database
 import { db } from "./firebase-config.js";
-import { collection, getDocs, doc, deleteDoc, query, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, doc, deleteDoc, query, orderBy, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getDatabase, ref, get, set, child, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// Initialize Realtime Database reference
+const rtdb = getDatabase();
 
 // ✅ Check if we are on `sales.html`
 if (window.location.pathname.includes("sales.html")) {
@@ -209,10 +213,24 @@ async function deleteSale(saleId) {
         return;
     }
 
-    if (confirm("Are you sure you want to delete this sale?")) {
+    if (confirm("Are you sure you want to delete this sale? The inventory quantities will be restored.")) {
         try {
+            // First get the sale data to restore inventory
+            const saleRef = doc(db, "sales", saleId);
+            const saleSnapshot = await getDoc(saleRef);
+
+            if (!saleSnapshot.exists()) {
+                console.error("❌ Sale not found!");
+                return;
+            }
+
+            const saleData = saleSnapshot.data();
+
+            // Restore inventory for each item in the sale
+            await restoreInventoryAfterSaleDelete(saleData.items);
+
             // ✅ Delete the sale from Firestore
-            await deleteDoc(doc(db, "sales", saleId));
+            await deleteDoc(saleRef);
             console.log(`✅ Sale ${saleId} deleted successfully!`);
 
             // ✅ Renumber remaining sales
@@ -225,6 +243,56 @@ async function deleteSale(saleId) {
             console.error("❌ Error deleting sale:", error);
             alert("Error deleting sale. Please try again.");
         }
+    }
+}
+
+// Function to restore inventory when a sale is deleted
+async function restoreInventoryAfterSaleDelete(items) {
+    try {
+        if (!rtdb) {
+            console.error("RTDB not initialized");
+            return;
+        }
+
+        console.log("Restoring inventory for deleted sale items:", items);
+
+        // Process each item in the deleted sale
+        for (const item of items) {
+            const inventoryRef = ref(rtdb, `inventory/${item.id}`);
+            const historyRef = ref(rtdb, 'inventory_history');
+
+            // Get current inventory
+            const snapshot = await get(inventoryRef);
+            const currentData = snapshot.val() || { quantity: 0, lastUpdated: Date.now() };
+
+            // Calculate new quantity (add back the sold quantity)
+            const newQuantity = currentData.quantity + item.quantity;
+            console.log(`Restoring ${item.quantity} units of ${item.name} (ID: ${item.id}). Current: ${currentData.quantity}, New: ${newQuantity}`);
+
+            // Update inventory
+            await set(inventoryRef, {
+                quantity: newQuantity,
+                lastUpdated: Date.now()
+            });
+
+            // Add to history
+            const historyEntry = {
+                productId: item.id,
+                operation: 'add',
+                quantity: item.quantity,
+                notes: 'Restored due to sale deletion',
+                timestamp: Date.now()
+            };
+
+            // Use Firebase push to add a new entry with unique ID
+            const historyEntryRef = ref(rtdb, 'inventory_history');
+            const newEntryRef = child(historyEntryRef, push().key);
+            await set(newEntryRef, historyEntry);
+        }
+
+        console.log("✅ Inventory restored successfully after sale deletion");
+    } catch (error) {
+        console.error("❌ Error restoring inventory:", error);
     }
 }
 

@@ -96,6 +96,8 @@
         import { db } from "./firebase-config.js";
         import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { barcodeScanner, testBarcodeSearch } from "./scanner.js";
+        import { rtdb } from "./firebase-config.js";
+        import { ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // Make key functions available globally for reliable mobile access
         window.barcodeScanner = barcodeScanner;
@@ -186,33 +188,75 @@
                         return;
                     }
 
-                    // Product validation passed, add to cart
-                    console.log("✅ Product validation passed, adding to cart:", product);
-
+                    // Product validation passed, check inventory before adding to cart
                     try {
-                        // Try/catch to handle any other errors
-                        // Use null for image parameter (4th param) and 1 for quantity (5th param)
-                        window.addToCart(product.id, product.name, product.price, null, 1);
-                        console.log("✅ Product successfully added to cart");
-
-                        // Show success notification
-                        showNotification(`Added ${product.name} to cart`, 'success');
-
-                        // Close the scanner if it's open
-                        const scannerContainer = document.getElementById('scanner-container');
-                        if (scannerContainer && scannerContainer.style.display !== 'none') {
-                            scannerContainer.style.display = 'none';
-
-                            // Also try to stop the scanner explicitly
-                            try {
-                                barcodeScanner.stopScanner();
-                            } catch (err) {
-                                console.error("Error stopping scanner:", err);
-                            }
+                        const inventoryRef = rtdb ? ref(rtdb, `inventory/${product.id}`) : null;
+                        if (!inventoryRef) {
+                            console.error("❌ ERROR: RTDB not initialized");
+                            showNotification('Error: Inventory database not available', 'error');
+                            return;
                         }
-                    } catch (err) {
-                        console.error("❌ ERROR adding product to cart:", err);
-                        showNotification(`Error adding product to cart: ${err.message}`, 'error');
+
+                        get(inventoryRef).then(snapshot => {
+                            const inventoryData = snapshot.exists() ? snapshot.val() : { quantity: 0 };
+                            const availableQuantity = inventoryData.quantity || 0;
+
+                            if (availableQuantity <= 0) {
+                                console.error(`❌ ERROR: ${product.name} is out of stock`);
+                                showNotification(`${product.name} is out of stock`, 'error');
+                                return;
+                            }
+
+                            // Find existing quantity in cart if any
+                            let existingQuantity = 0;
+                            if (window.cart) {
+                                const existingItem = window.cart.find(item => item.id === product.id);
+                                if (existingItem) {
+                                    existingQuantity = existingItem.quantity;
+                                }
+                            }
+
+                            // Default quantity to add is 1
+                            const quantityToAdd = 1;
+
+                            // Check if adding would exceed inventory
+                            if (existingQuantity + quantityToAdd > availableQuantity) {
+                                showNotification(`Can't add more ${product.name}. Only ${availableQuantity} available and you already have ${existingQuantity} in cart.`, 'warning');
+                                return;
+                            }
+
+                            // Try/catch to handle any other errors
+                            try {
+                                // Use null for image parameter (4th param) and 1 for quantity (5th param)
+                                window.addToCart(product.id, product.name, product.price, null, 1);
+                                console.log("✅ Product successfully added to cart");
+
+                                // Show success notification
+                                showNotification(`Added ${product.name} to cart`, 'success');
+
+                                // Close the scanner if it's open
+                                const scannerContainer = document.getElementById('scanner-container');
+                                if (scannerContainer && scannerContainer.style.display !== 'none') {
+                                    scannerContainer.style.display = 'none';
+
+                                    // Also try to stop the scanner explicitly
+                                    try {
+                                        barcodeScanner.stopScanner();
+                                    } catch (err) {
+                                        console.error("Error stopping scanner:", err);
+                                    }
+                                }
+                            } catch (err) {
+                                console.error("❌ ERROR adding product to cart:", err);
+                                showNotification(`Error adding product to cart: ${err.message}`, 'error');
+                            }
+                        }).catch(error => {
+                            console.error("❌ ERROR checking inventory:", error);
+                            showNotification(`Error checking inventory: ${error.message}`, 'error');
+                        });
+                    } catch (outerError) {
+                        console.error("❌ ERROR in outer try/catch:", outerError);
+                        showNotification(`Error processing scanned product: ${outerError.message}`, 'error');
                     }
                 };
 
@@ -291,10 +335,9 @@
                         scannerContainer.style.display = 'none';
                     }
                 });
-
-            } catch (error) {
-                console.error("❌ Error initializing scanner on record page:", error);
-                showNotification("Failed to initialize scanner functionality", "error");
+            } catch (err) {
+                console.error("❌ ERROR initializing record.html:", err);
+                showNotification("Error initializing record.html: " + (err.message || "Unknown error"), 'error');
             }
         });
     </script>

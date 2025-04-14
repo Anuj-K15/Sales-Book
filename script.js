@@ -24,80 +24,72 @@ if (window.location.pathname.includes("sales.html")) {
 // ✅ Function to load products
 async function loadProducts() {
     const beerList = document.getElementById("beer-list");
-    if (!beerList) return;
+    if (!beerList) {
+        console.warn("Beer list element not found. Not on the record page?");
+        return;
+    }
 
     try {
-        beerList.innerHTML = "<div class='loading-message'>Loading products...</div>";
+        beerList.innerHTML = "<div class='loading-message'>Loading products...</div>"; // ✅ Show loading message
 
         const productsRef = collection(db, "products");
         const snapshot = await getDocs(productsRef);
 
-        beerList.innerHTML = "";
-        if (snapshot.empty) {
-            beerList.innerHTML = "<div class='no-products'>No products available</div>";
-            return;
-        }
-
-        // Initialize products array for inventory check
         const products = [];
-
-        // First, get all products
         snapshot.forEach((doc) => {
-            const product = doc.data();
-            product.id = doc.id;
-            products.push(product);
+            products.push({ id: doc.id, ...doc.data() });
         });
 
-        // Sort products alphabetically by name
-        products.sort((a, b) => a.name.localeCompare(b.name));
+        // Fetch inventory data
+        const productIds = products.map(p => p.id);
+        const inventoryData = await getInventoryData(productIds);
 
-        // Get inventory data for these products
-        const inventoryData = await getInventoryData(products.map(p => p.id));
+        console.log(`✅ Fetched ${products.length} products and inventory data`);
 
-        // Create a document fragment for better performance
+        // Use DocumentFragment for better performance
         const fragment = document.createDocumentFragment();
+        beerList.innerHTML = ""; // ✅ Clear loading message
 
-        // Now create the beer cards with inventory information
+        // Sort products by name
+        products.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
         products.forEach(product => {
             const inventory = inventoryData[product.id] || { quantity: 0 };
             const isOutOfStock = inventory.quantity <= 0;
-            const isLowStock = !isOutOfStock && inventory.quantity <= 5;
+            const isLowStock = inventory.quantity > 0 && inventory.quantity <= 5;
 
+            // Create a beer card for each product
             const beerCard = document.createElement("div");
             beerCard.className = "beer-card";
-            beerCard.setAttribute("data-id", product.id);
-            beerCard.setAttribute("data-name", product.name);
-            beerCard.setAttribute("data-price", product.price);
+            beerCard.dataset.id = product.id;
+            beerCard.dataset.stock = inventory.quantity;
 
             // Create image container
             const imageContainer = document.createElement("div");
             imageContainer.className = "product-image-container";
 
-            const image = document.createElement("img");
-            image.src = product.image || "assets/default-product.png";
-            image.alt = product.name;
-            image.loading = "lazy"; // Lazy load images for better performance
-
-            imageContainer.appendChild(image);
+            // Create product image
+            const img = document.createElement("img");
+            img.src = product.image || product.imageUrl || "https://via.placeholder.com/150?text=No+Image";
+            img.alt = product.name;
+            img.loading = "lazy"; // Lazy load for better performance
 
             // Create product info container
             const infoContainer = document.createElement("div");
             infoContainer.className = "product-info";
 
-            // Add product name
+            // Create product name heading
             const productName = document.createElement("h3");
             productName.textContent = product.name;
 
-            // Add product price
+            // Create product price paragraph
             const productPrice = document.createElement("p");
-            productPrice.textContent = `₹${product.price}`;
-
-            infoContainer.appendChild(productName);
-            infoContainer.appendChild(productPrice);
+            productPrice.innerHTML = `₹${product.price.toFixed(2)}`;
 
             // Create inventory status element
             const statusElement = document.createElement("div");
             statusElement.className = `inventory-status ${isOutOfStock ? 'out-of-stock' : isLowStock ? 'low-stock' : ''}`;
+
             statusElement.textContent = isOutOfStock ?
                 "Out of Stock" :
                 isLowStock ?
@@ -108,9 +100,23 @@ async function loadProducts() {
             const quantityInput = document.createElement("input");
             quantityInput.type = "number";
             quantityInput.min = "1";
+            quantityInput.max = inventory.quantity.toString(); // Set max to available inventory
             quantityInput.value = "1";
             quantityInput.className = "quantity";
             if (isOutOfStock) quantityInput.disabled = true;
+
+            // Add change event to enforce max quantity
+            quantityInput.addEventListener('change', () => {
+                const currentValue = parseInt(quantityInput.value);
+                if (isNaN(currentValue) || currentValue < 1) {
+                    quantityInput.value = "1";
+                } else if (currentValue > inventory.quantity) {
+                    quantityInput.value = inventory.quantity.toString();
+                    if (typeof window.showNotification === 'function') {
+                        window.showNotification(`Maximum available quantity: ${inventory.quantity}`, 'info');
+                    }
+                }
+            });
 
             // Create add to cart button
             const addButton = document.createElement("button");
@@ -119,6 +125,10 @@ async function loadProducts() {
             addButton.onclick = () => addToCart(product.id, product.name, product.price, addButton);
 
             // Append all elements to the card
+            imageContainer.appendChild(img);
+            infoContainer.appendChild(productName);
+            infoContainer.appendChild(productPrice);
+
             beerCard.appendChild(imageContainer);
             beerCard.appendChild(infoContainer);
             beerCard.appendChild(statusElement);
@@ -174,71 +184,135 @@ document.addEventListener("DOMContentLoaded", loadProducts);
 window.addToCart = function (productId, name, price, buttonElement, scannedQuantity) {
     console.log("Adding to cart:", { productId, name, price, scannedQuantity, buttonType: buttonElement ? "Button Click" : "Scanner" });
 
-    let quantity = 1; // Default quantity
+    // First, check available inventory
+    const inventoryRef = ref(rtdb, `inventory/${productId}`);
+    get(inventoryRef).then((snapshot) => {
+        // Get inventory data for this product
+        const inventoryData = snapshot.exists() ? snapshot.val() : { quantity: 0 };
+        const availableQuantity = inventoryData.quantity || 0;
 
-    if (scannedQuantity) {
-        // For scanned product, use provided quantity
-        quantity = scannedQuantity;
-        console.log(`Using scanned quantity: ${quantity} for product: ${name}`);
-    } else if (buttonElement) {
-        // For button click, get quantity from the input field
-        const beerCard = buttonElement.closest(".beer-card");
-        const quantityInput = beerCard.querySelector(".quantity");
-        quantity = parseInt(quantityInput.value);
+        console.log(`Inventory check: ${name} has ${availableQuantity} available`);
 
-        if (isNaN(quantity) || quantity <= 0) {
-            alert("❌ Please enter a valid quantity!");
-            return;
-        }
-    }
-
-    // Check if the product is already in the cart
-    const existingItemIndex = cart.findIndex(item => item.id === productId);
-
-    if (existingItemIndex !== -1) {
-        // Product exists in cart, increment quantity
-        cart[existingItemIndex].quantity += quantity;
-        cart[existingItemIndex].totalPrice = cart[existingItemIndex].price * cart[existingItemIndex].quantity;
-        console.log(`✅ Updated quantity for ${name} to ${cart[existingItemIndex].quantity}`);
-    } else {
-        // Product does not exist in cart, add new item
-        const item = {
-            id: productId,
-            name: name,
-            price: price,
-            quantity: quantity,
-            totalPrice: price * quantity
-        };
-        cart.push(item);
-        console.log("✅ Added new item to cart:", item);
-    }
-
-    // Update the cart UI
-    updateCart();
-
-    // Visual feedback for the user
-    if (buttonElement) {
-        buttonElement.textContent = "Added!";
-        buttonElement.style.backgroundColor = "#4CAF50";
-
-        // Reset button text after a brief delay
-        setTimeout(() => {
-            buttonElement.textContent = "Add to Cart";
-            buttonElement.style.backgroundColor = "";
-        }, 1000);
-    } else {
-        // For scanned items, show a notification
-        if (typeof showNotification === 'function') {
-            // Show different messages for new vs. updated items
-            if (existingItemIndex !== -1) {
-                showNotification(`Updated ${name} quantity to ${cart[existingItemIndex].quantity}`, 'success');
+        // If out of stock, inform user and return
+        if (availableQuantity <= 0) {
+            const message = `Sorry, ${name} is out of stock`;
+            if (typeof showNotification === 'function') {
+                showNotification(message, 'error');
             } else {
-                showNotification(`Added ${name} to cart (${quantity})`, 'success');
+                alert(message);
+            }
+            return false;
+        }
+
+        let quantity = 1; // Default quantity
+
+        if (scannedQuantity) {
+            // For scanned product, use provided quantity
+            quantity = scannedQuantity;
+            console.log(`Using scanned quantity: ${quantity} for product: ${name}`);
+        } else if (buttonElement) {
+            // For button click, get quantity from the input field
+            const beerCard = buttonElement.closest(".beer-card");
+            const quantityInput = beerCard.querySelector(".quantity");
+            quantity = parseInt(quantityInput.value);
+
+            if (isNaN(quantity) || quantity <= 0) {
+                alert("❌ Please enter a valid quantity!");
+                return false;
             }
         }
-    }
 
-    return true; // Successfully added
+        // Check if the product is already in the cart
+        const existingItemIndex = cart.findIndex(item => item.id === productId);
+        let totalRequestedQuantity = quantity;
+
+        if (existingItemIndex !== -1) {
+            // If product already in cart, add the new quantity to existing quantity
+            totalRequestedQuantity += cart[existingItemIndex].quantity;
+        }
+
+        // Check if requested quantity exceeds available inventory
+        if (totalRequestedQuantity > availableQuantity) {
+            const message = `Sorry, only ${availableQuantity} units of ${name} are available. You already have ${existingItemIndex !== -1 ? cart[existingItemIndex].quantity : 0} in your cart.`;
+
+            if (typeof showNotification === 'function') {
+                showNotification(message, 'warning');
+            } else {
+                alert(message);
+            }
+
+            // Optionally set quantity to maximum available
+            if (buttonElement) {
+                const beerCard = buttonElement.closest(".beer-card");
+                const quantityInput = beerCard.querySelector(".quantity");
+
+                // Calculate max additional quantity user can add
+                const maxAdditionalQuantity = availableQuantity - (existingItemIndex !== -1 ? cart[existingItemIndex].quantity : 0);
+                quantityInput.value = Math.max(1, maxAdditionalQuantity);
+
+                // Also show max available in the error message
+                if (typeof showNotification === 'function') {
+                    showNotification(`Maximum available quantity set: ${maxAdditionalQuantity}`, 'info');
+                }
+            }
+
+            return false;
+        }
+
+        // If we pass all checks, add to cart
+        if (existingItemIndex !== -1) {
+            // Product exists in cart, increment quantity
+            cart[existingItemIndex].quantity += quantity;
+            cart[existingItemIndex].totalPrice = cart[existingItemIndex].price * cart[existingItemIndex].quantity;
+            console.log(`✅ Updated quantity for ${name} to ${cart[existingItemIndex].quantity}`);
+        } else {
+            // Product does not exist in cart, add new item
+            const item = {
+                id: productId,
+                name: name,
+                price: price,
+                quantity: quantity,
+                totalPrice: price * quantity
+            };
+            cart.push(item);
+            console.log("✅ Added new item to cart:", item);
+        }
+
+        // Update the cart UI
+        updateCart();
+
+        // Visual feedback for the user
+        if (buttonElement) {
+            buttonElement.textContent = "Added!";
+            buttonElement.style.backgroundColor = "#4CAF50";
+
+            // Reset button text after a brief delay
+            setTimeout(() => {
+                buttonElement.textContent = "Add to Cart";
+                buttonElement.style.backgroundColor = "";
+            }, 1000);
+        } else {
+            // For scanned items, show a notification
+            if (typeof showNotification === 'function') {
+                // Show different messages for new vs. updated items
+                if (existingItemIndex !== -1) {
+                    showNotification(`Updated ${name} quantity to ${cart[existingItemIndex].quantity}`, 'success');
+                } else {
+                    showNotification(`Added ${name} to cart (${quantity})`, 'success');
+                }
+            }
+        }
+
+        return true; // Successfully added
+    }).catch(error => {
+        console.error("Error checking inventory:", error);
+        if (typeof showNotification === 'function') {
+            showNotification(`Error adding to cart: ${error.message}`, 'error');
+        } else {
+            alert(`Error adding to cart: ${error.message}`);
+        }
+        return false;
+    });
 };
 
 
