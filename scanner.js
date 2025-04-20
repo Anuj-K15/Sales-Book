@@ -13,17 +13,20 @@ class BarcodeScanner {
     }
 
     async initializeScanner(containerId, onProductFound) {
+        if (this.isScanning) {
+            console.log("Scanner is already running");
+            return;
+        }
+
         try {
-            if (this.isScanning) {
-                await this.stopScanner();
-            }
-
+            console.log("Initializing scanner in container:", containerId);
             const readerElement = document.getElementById(containerId);
+
             if (!readerElement) {
-                throw new Error(`Scanner element with ID "${containerId}" not found`);
+                throw new Error(`Scanner container element with ID "${containerId}" not found.`);
             }
 
-            // Clear the element to ensure clean initialization
+            // Clear any existing content in the reader element
             while (readerElement.firstChild) {
                 readerElement.removeChild(readerElement.firstChild);
             }
@@ -32,16 +35,31 @@ class BarcodeScanner {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             console.log(`📱 Device: ${isMobile ? 'Mobile' : 'Desktop'}, UserAgent: ${navigator.userAgent}`);
 
-            // Create scanner immediately without loading indicators
+            // Add a loading spinner
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'scanner-loading';
+            loadingDiv.innerHTML = 'Initializing camera...';
+            readerElement.appendChild(loadingDiv);
+
+            // Give the browser a moment to render the container
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // Create scanner with better mobile-optimized settings
             this.html5QrcodeScanner = new Html5Qrcode(containerId);
+
+            // Check and log available camera devices
+            try {
+                const devices = await Html5Qrcode.getCameras();
+                console.log(`📷 Available cameras: ${devices.length}`, devices);
+            } catch (cameraError) {
+                console.warn("Could not enumerate cameras", cameraError);
+            }
 
             // Define better scanning configuration for mobile
             const config = {
-                fps: isMobile ? 10 : 15, // Increased FPS for faster scanning
-                qrbox: isMobile
-                    ? { width: 220, height: 220 }
-                    : { width: 250, height: 250 },
-                aspectRatio: 1.0, // Square aspect ratio
+                fps: isMobile ? 10 : 10, // Higher FPS for better scanning
+                qrbox: isMobile ? { width: 250, height: 250 } : { width: 300, height: 300 },
+                aspectRatio: 1.0,
                 formatsToSupport: [
                     Html5QrcodeSupportedFormats.QR_CODE,
                     Html5QrcodeSupportedFormats.EAN_13,
@@ -54,11 +72,7 @@ class BarcodeScanner {
                     Html5QrcodeSupportedFormats.UPC_E
                 ],
                 disableFlip: false,
-                rememberLastUsedCamera: true,
-                showTorchButtonIfSupported: true, // Enable torch button for low light
-                useBarCodeDetectorIfSupported: true,
-                showZoomSliderIfSupported: false,
-                defaultZoomValueIfSupported: 2.0
+                rememberLastUsedCamera: true
             };
 
             console.log(`Starting scanner on ${isMobile ? 'mobile' : 'desktop'} device with config:`, config);
@@ -66,7 +80,7 @@ class BarcodeScanner {
             // Make onProductFound globally accessible for this scan session
             window._barcodeProductCallback = onProductFound;
 
-            // For mobile, create a more reliable camera config
+            // For mobile, create a more reliable camera config with torch enabled
             const cameraConfig = {
                 facingMode: "environment" // Use back camera on mobile
             };
@@ -79,7 +93,7 @@ class BarcodeScanner {
                     console.log("✅ Scanned code:", decodedText);
 
                     // Show feedback to user
-                    window.showNotification?.(`Barcode detected`, "info");
+                    window.showNotification?.(`Barcode detected: ${decodedText}`, "info");
 
                     // Prevent duplicate scans or too frequent scans
                     if (this.scanCooldown || decodedText === this.lastScannedCode) {
@@ -90,8 +104,17 @@ class BarcodeScanner {
                     this.lastScannedCode = decodedText;
                     this.scanCooldown = true;
 
+                    // Remove loading indicator if it exists
+                    const loadingElement = readerElement.querySelector('.scanner-loading');
+                    if (loadingElement) {
+                        loadingElement.remove();
+                    }
+
                     // Process the scan with global fallback
                     try {
+                        // Add visual feedback
+                        window.showNotification?.("Searching for product...", "info");
+
                         // Handle the scan with global callback fallback
                         await this.handleScan(decodedText, window._barcodeProductCallback || onProductFound);
                     } catch (err) {
@@ -111,8 +134,41 @@ class BarcodeScanner {
             ).catch(err => {
                 console.error("Failed to start scanner:", err);
                 window.showNotification?.("Failed to start scanner: " + err.message, "error");
+
+                // Remove loading spinner
+                const loadingElement = readerElement.querySelector('.scanner-loading');
+                if (loadingElement) {
+                    loadingElement.remove();
+                }
+
                 throw err;
             });
+
+            // Try to turn on the flashlight automatically after camera starts
+            try {
+                console.log("Attempting to automatically turn on flashlight...");
+                // Wait a short delay to ensure camera is fully initialized
+                setTimeout(async () => {
+                    try {
+                        // Try to turn on the flashlight directly
+                        // The torch method will fail with an exception if not supported
+                        await this.html5QrcodeScanner.torch(true);
+                        console.log("✅ Flashlight turned on automatically");
+                    } catch (torchError) {
+                        console.warn("Could not turn on flashlight:", torchError);
+                        // Don't show an error to the user - this is an enhancement, not critical functionality
+                    }
+                }, 1000); // Delay to ensure camera is initialized
+            } catch (error) {
+                console.warn("Error with torch functionality:", error);
+                // Don't show error to user - if torch fails, scanning still works
+            }
+
+            // Remove loading spinner after successful start
+            const loadingElement = readerElement.querySelector('.scanner-loading');
+            if (loadingElement) {
+                loadingElement.remove();
+            }
 
             this.isScanning = true;
             console.log("✅ Scanner started successfully");
