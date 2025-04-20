@@ -10,6 +10,7 @@ class BarcodeScanner {
         this.isScanning = false;
         this.lastScannedCode = null; // Prevent duplicate scans
         this.scanCooldown = false; // Prevent rapid successive scans
+        this.torchEnabled = false;
     }
 
     async initializeScanner(containerId, onProductFound) {
@@ -40,6 +41,70 @@ class BarcodeScanner {
             loadingDiv.className = 'scanner-loading';
             loadingDiv.innerHTML = 'Initializing camera...';
             readerElement.appendChild(loadingDiv);
+
+            // Add a manual torch/flashlight toggle button
+            const torchButton = document.createElement('button');
+            torchButton.className = 'torch-toggle';
+            torchButton.innerHTML = '<i class="fas fa-bolt"></i>';
+            torchButton.title = 'Toggle Flashlight';
+            torchButton.setAttribute('id', 'torch-toggle-btn');
+
+            // Insert the torch button into the scanner container's parent, not the reader element
+            const scannerContainer = readerElement.closest('.scanner-container');
+            if (scannerContainer) {
+                scannerContainer.appendChild(torchButton);
+            } else {
+                readerElement.parentElement.appendChild(torchButton);
+            }
+
+            // Add torch toggle functionality
+            torchButton.addEventListener('click', async () => {
+                try {
+                    if (!this.html5QrcodeScanner) return;
+
+                    // Toggle the torch state
+                    this.torchEnabled = !this.torchEnabled;
+
+                    console.log(`Toggling torch to: ${this.torchEnabled ? 'ON' : 'OFF'}`);
+
+                    // Try multiple methods to toggle torch
+                    try {
+                        // Method 1: Direct torch method
+                        await this.html5QrcodeScanner.torch(this.torchEnabled);
+                        console.log(`Torch ${this.torchEnabled ? 'enabled' : 'disabled'} via torch method`);
+                        return;
+                    } catch (e) {
+                        console.log("Direct torch toggle failed, trying alternatives:", e);
+                    }
+
+                    // Method 2: Using video constraints
+                    try {
+                        await this.html5QrcodeScanner.applyVideoConstraints({
+                            advanced: [{ torch: this.torchEnabled }]
+                        });
+                        console.log(`Torch ${this.torchEnabled ? 'enabled' : 'disabled'} via video constraints`);
+                        return;
+                    } catch (e) {
+                        console.log("Video constraints torch toggle failed:", e);
+                    }
+
+                    // Method 3: If scanner has underlying instance
+                    if (this.html5QrcodeScanner._scanner) {
+                        try {
+                            await this.html5QrcodeScanner._scanner.torch(this.torchEnabled);
+                            console.log(`Torch ${this.torchEnabled ? 'enabled' : 'disabled'} via underlying scanner`);
+                            return;
+                        } catch (e) {
+                            console.log("Underlying scanner torch toggle failed:", e);
+                        }
+                    }
+
+                    console.log("⚠️ Could not toggle flashlight through any method");
+                    showNotification?.("Flashlight control not supported on this device", "warning");
+                } catch (err) {
+                    console.error("Error toggling torch:", err);
+                }
+            });
 
             // Give the browser a moment to render the container
             await new Promise(resolve => setTimeout(resolve, 300));
@@ -82,7 +147,12 @@ class BarcodeScanner {
 
             // For mobile, create a more reliable camera config with torch enabled
             const cameraConfig = {
-                facingMode: "environment" // Use back camera on mobile
+                facingMode: "environment", // Use back camera on mobile
+                // Explicitly request torch/flashlight capability
+                advanced: [{
+                    torch: true,
+                    focusMode: "continuous"
+                }]
             };
 
             // Start the scanner with improved error handling
@@ -150,15 +220,45 @@ class BarcodeScanner {
                 // Wait a short delay to ensure camera is fully initialized
                 setTimeout(async () => {
                     try {
-                        // Try to turn on the flashlight directly
-                        // The torch method will fail with an exception if not supported
-                        await this.html5QrcodeScanner.torch(true);
-                        console.log("✅ Flashlight turned on automatically");
+                        // Try multiple approaches to turn on the flashlight
+
+                        // Approach 1: Direct torch method
+                        try {
+                            await this.html5QrcodeScanner.torch(true);
+                            console.log("✅ Flashlight turned on via torch method");
+                            return; // Exit if successful
+                        } catch (e) {
+                            console.log("Torch method failed, trying alternatives:", e);
+                        }
+
+                        // Approach 2: Use applyVideoConstraints with torch constraint
+                        try {
+                            await this.html5QrcodeScanner.applyVideoConstraints({
+                                advanced: [{ torch: true }]
+                            });
+                            console.log("✅ Flashlight turned on via video constraints");
+                            return; // Exit if successful
+                        } catch (e) {
+                            console.log("Video constraints method failed:", e);
+                        }
+
+                        // Approach 3: If the scanner has an underlying instance, try accessing that
+                        if (this.html5QrcodeScanner._scanner) {
+                            try {
+                                await this.html5QrcodeScanner._scanner.torch(true);
+                                console.log("✅ Flashlight turned on via underlying scanner");
+                                return; // Exit if successful
+                            } catch (e) {
+                                console.log("Underlying scanner torch method failed:", e);
+                            }
+                        }
+
+                        console.log("⚠️ Could not turn on flashlight through any method");
                     } catch (torchError) {
                         console.warn("Could not turn on flashlight:", torchError);
                         // Don't show an error to the user - this is an enhancement, not critical functionality
                     }
-                }, 1000); // Delay to ensure camera is initialized
+                }, 2000); // Longer delay to ensure camera is fully initialized
             } catch (error) {
                 console.warn("Error with torch functionality:", error);
                 // Don't show error to user - if torch fails, scanning still works
@@ -182,10 +282,27 @@ class BarcodeScanner {
     async stopScanner() {
         if (this.html5QrcodeScanner && this.isScanning) {
             try {
+                // Turn off torch if it was on
+                if (this.torchEnabled) {
+                    try {
+                        await this.html5QrcodeScanner.torch(false);
+                    } catch (torchErr) {
+                        console.warn("Error turning off torch:", torchErr);
+                    }
+                    this.torchEnabled = false;
+                }
+                
+                // Stop the scanner
                 await this.html5QrcodeScanner.stop();
                 this.isScanning = false;
                 this.lastScannedCode = null;
                 console.log("Scanner stopped");
+                
+                // Remove the torch toggle button if it exists
+                const torchButton = document.getElementById('torch-toggle-btn');
+                if (torchButton) {
+                    torchButton.remove();
+                }
             } catch (err) {
                 console.error("Error stopping scanner:", err);
             }
