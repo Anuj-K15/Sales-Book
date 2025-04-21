@@ -306,13 +306,6 @@
     width: 100% !important;
     margin: 0 auto;
   }
-
-  .torch-toggle {
-    bottom: 70px;
-    right: 15px;
-    width: 45px;
-    height: 45px;
-  }
 }
 
 /* Scanner UI Improvements */
@@ -472,37 +465,4 @@ div:has(> #reader) {
   overflow: hidden !important;
   border: 1px solid #ddd !important;
   border-radius: 5px !important;
-}
-
-/* Torch toggle button */
-.torch-toggle {
-  position: absolute;
-  bottom: 65px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.torch-toggle i {
-  font-size: 24px;
-  color: #333;
-}
-
-.torch-toggle:hover {
-  transform: scale(1.05);
-  background: white;
-}
-
-.torch-toggle:active {
-  transform: scale(0.95);
 }
