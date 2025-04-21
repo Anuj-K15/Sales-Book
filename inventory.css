@@ -404,12 +404,63 @@ tr:hover {
   border: 1px solid #3d8b40;
 }
 
-/* Inventory History Section */
+/* Inventory Overview and History Sections */
+.inventory-overview,
 .inventory-history {
-  margin-top: 30px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 30px;
 }
 
-/* Responsive Design */
+/* Make the table containers scrollable */
+.inventory-overview .table-container,
+.inventory-history .table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  /* Custom scrollbar for better UX */
+  scrollbar-width: thin;
+  scrollbar-color: #6c757d #f5f5f5;
+}
+
+/* Custom scrollbar for Webkit browsers */
+.inventory-overview .table-container::-webkit-scrollbar,
+.inventory-history .table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.inventory-overview .table-container::-webkit-scrollbar-track,
+.inventory-history .table-container::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.inventory-overview .table-container::-webkit-scrollbar-thumb,
+.inventory-history .table-container::-webkit-scrollbar-thumb {
+  background: #6c757d;
+  border-radius: 4px;
+}
+
+.inventory-overview .table-container::-webkit-scrollbar-thumb:hover,
+.inventory-history .table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Keep the table headers visible while scrolling */
+.inventory-overview thead,
+.inventory-history thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: #f5f5f5;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .form-row {
     flex-direction: column;
@@ -422,6 +473,11 @@ tr:hover {
 
   .search-bar {
     flex-direction: column;
+  }
+
+  .inventory-overview .table-container,
+  .inventory-history .table-container {
+    max-height: 300px;
   }
 }
 
@@ -457,6 +513,11 @@ tr:hover {
   .edit-btn,
   .delete-btn {
     width: 100%;
+  }
+
+  .inventory-overview .table-container,
+  .inventory-history .table-container {
+    max-height: 250px;
   }
 }
 
@@ -534,4 +595,136 @@ tr:hover {
 
 .search-result-item .result-status .out-of-stock {
   color: #f44336;
+}
+
+/* Scroll indicator */
+.scroll-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  margin: 10px 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.scroll-indicator i {
+  margin-right: 5px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Hide scroll indicator on large screens where the tables may not need scrolling */
+@media (min-height: 900px) {
+  .scroll-indicator {
+    display: none;
+  }
+}
+
+/* Quick Filters for Inventory */
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  align-items: center;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #495057;
+  margin-right: 5px;
+}
+
+.filter-btn {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: white;
+  color: #495057;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-btn i {
+  font-size: 0.9rem;
+}
+
+.filter-btn:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.filter-btn.active {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.filter-btn[data-filter="in-stock"] i {
+  color: #2e7d32;
+}
+
+.filter-btn[data-filter="low-stock"] i {
+  color: #ff8f00;
+}
+
+.filter-btn[data-filter="out-of-stock"] i {
+  color: #c62828;
+}
+
+.filter-btn.active i {
+  color: white;
+}
+
+/* Responsive adjustments for filters */
+@media (max-width: 768px) {
+  .quick-filters {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+  }
+
+  .filter-label {
+    margin-bottom: 8px;
+  }
+
+  .filter-btn {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 575px) {
+  .filter-btn {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
 }

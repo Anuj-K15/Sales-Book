@@ -9,12 +9,17 @@ import {
     push,
     onValue,
     query,
-    orderByChild
+    orderByChild,
+    child
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // Global Variables
 let allProducts = [];
 let currentInventoryData = {};
+let inventoryList;
+let historyList;
+let searchBar;
+let currentFilter = 'all'; // Track the current active filter
 const LOW_STOCK_THRESHOLD = 5;
 
 // DOM Elements
@@ -25,8 +30,6 @@ const stockOperationSelect = document.getElementById('stock-operation');
 const stockNotesInput = document.getElementById('stock-notes');
 const saveInventoryBtn = document.getElementById('save-inventory');
 const resetFormBtn = document.getElementById('reset-form');
-const inventoryList = document.getElementById('inventory-list');
-const historyList = document.getElementById('history-list');
 const confirmModal = document.getElementById('confirm-modal');
 const closeModalBtn = document.querySelector('.close-btn');
 const modalMessage = document.getElementById('modal-message');
@@ -34,9 +37,6 @@ const modalConfirmBtn = document.getElementById('modal-confirm');
 const modalCancelBtn = document.getElementById('modal-cancel');
 const inventoryForm = document.getElementById('inventory-form');
 const editIdInput = document.getElementById('edit-id');
-
-// Search bar component instance
-let searchBar;
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
@@ -48,18 +48,34 @@ document.addEventListener('DOMContentLoaded', () => {
 // Initialize the inventory system
 async function initInventorySystem() {
     try {
-        console.log('Loading products...');
+        console.log('Initializing inventory system...');
+        inventoryList = document.getElementById('inventory-list');
+        historyList = document.getElementById('history-list');
+
+        if (!inventoryList || !historyList) {
+            throw new Error('Required DOM elements not found');
+        }
+
+        // Load products first
         await loadProducts();
-        console.log('Loading inventory data...');
+
+        // Initialize inventory records for all products
+        await initializeInventory();
+
+        // Then load inventory data and history
         await loadInventoryData();
-        console.log('Loading inventory history...');
         await loadInventoryHistory();
-        console.log('Initializing search component...');
-        await initializeInventory(); // Make sure inventory exists for all products
+
+        // Set up event listeners
+        setupEventListeners();
+
+        // Initialize the search component after data is loaded
         initSearchComponent();
+
+        console.log('Inventory system initialized successfully');
     } catch (error) {
         console.error('Error initializing inventory system:', error);
-        showNotification('An error occurred while initializing the inventory system', 'error');
+        showNotification('Failed to initialize inventory system', 'error');
     }
 }
 
@@ -109,7 +125,11 @@ async function loadInventoryData() {
         onValue(inventoryRef, (snapshot) => {
             console.log('Received inventory update from Firebase');
             const data = snapshot.val() || {};
+
+            // Store a reference to the full inventory data for filtering
             currentInventoryData = data;
+
+            // Render the inventory table with current filter
             renderInventoryTable(data);
         }, (error) => {
             console.error('Error in onValue listener:', error);
@@ -121,15 +141,24 @@ async function loadInventoryData() {
     }
 }
 
-// Load inventory history from Realtime Database
+// Load inventory history from Realtime Database - Last 3 months only
 async function loadInventoryHistory() {
     try {
+        // Calculate date 3 months ago
+        const threeMonthsAgo = new Date();
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+        const threeMonthsAgoTimestamp = threeMonthsAgo.getTime();
+
+        console.log(`Filtering inventory history since: ${threeMonthsAgo.toLocaleDateString()}`);
+
+        // The database query still gets all data - we'll filter in the render function
+        // since Firebase Realtime Database doesn't support server-side filtering by value comparison
         const historyRef = query(ref(rtdb, 'inventory_history'), orderByChild('timestamp'));
 
         // Listen for real-time updates
         onValue(historyRef, (snapshot) => {
             const data = snapshot.val() || {};
-            renderHistoryTable(data);
+            renderHistoryTable(data, threeMonthsAgoTimestamp);
         }, (error) => {
             console.error('Error in history onValue listener:', error);
         });
@@ -140,12 +169,12 @@ async function loadInventoryHistory() {
     }
 }
 
-// Render inventory table
+// Render inventory table with filtering
 function renderInventoryTable(data) {
     // Clear loading message
     inventoryList.innerHTML = '';
 
-    if (Object.keys(data).length === 0) {
+    if (!data || Object.keys(data).length === 0) {
         inventoryList.innerHTML = `
             <tr>
                 <td colspan="5" class="no-data">No inventory data available</td>
@@ -160,29 +189,54 @@ function renderInventoryTable(data) {
         return;
     }
 
-    // We're now using the search bar component instead of separate inputs
-    // Get search term and filter from search bar if it exists
-    let searchTerm = '';
-    let statusFilter = 'all';
-
+    // Convert to array of entries
     let filteredItems = Object.entries(data);
 
-    // Prepare new search data
+    // Prepare search data
     const searchData = [];
 
-    if (filteredItems.length === 0) {
-        inventoryList.innerHTML = `
-            <tr>
-                <td colspan="5" class="no-data">No matching inventory items found</td>
-            </tr>
-        `;
+    // Process and filter items
+    filteredItems.forEach(([productId, item]) => {
+        const product = allProducts.find(p => p.id === productId) || { name: 'Unknown Product' };
+        const lastUpdated = new Date(item.lastUpdated).toLocaleString();
 
-        // Update search data with empty array
-        if (searchBar) {
-            searchBar.setData([]);
+        // Determine stock status
+        let status = 'in-stock';
+        let statusClass = 'status-in-stock';
+        let statusText = 'In Stock';
+
+        if (item.quantity <= 0) {
+            status = 'out-of-stock';
+            statusClass = 'status-out-of-stock';
+            statusText = 'Out of Stock';
+        } else if (item.quantity <= LOW_STOCK_THRESHOLD) {
+            status = 'low-stock';
+            statusClass = 'status-low-stock';
+            statusText = 'Low Stock';
         }
 
-        return;
+        // Add to search data regardless of filter
+        searchData.push({
+            id: productId,
+            name: product.name,
+            quantity: item.quantity,
+            status: status,
+            lastUpdated: lastUpdated
+        });
+    });
+
+    // Apply current filter (if not 'all')
+    if (currentFilter !== 'all') {
+        filteredItems = filteredItems.filter(([productId, item]) => {
+            if (currentFilter === 'in-stock') {
+                return item.quantity > LOW_STOCK_THRESHOLD;
+            } else if (currentFilter === 'low-stock') {
+                return item.quantity > 0 && item.quantity <= LOW_STOCK_THRESHOLD;
+            } else if (currentFilter === 'out-of-stock') {
+                return item.quantity <= 0;
+            }
+            return true;
+        });
     }
 
     // Sort items by product name
@@ -192,7 +246,23 @@ function renderInventoryTable(data) {
         return productA.name.localeCompare(productB.name);
     });
 
-    // Render each inventory item
+    // Show message if no items match the filter
+    if (filteredItems.length === 0) {
+        inventoryList.innerHTML = `
+            <tr>
+                <td colspan="5" class="no-data">No ${currentFilter.replace('-', ' ')} items found</td>
+            </tr>
+        `;
+
+        // Update search data to keep it complete for searching
+        if (searchBar) {
+            searchBar.setData(searchData);
+        }
+
+        return;
+    }
+
+    // Render each inventory item that matches the filter
     filteredItems.forEach(([productId, item]) => {
         const product = allProducts.find(p => p.id === productId) || { name: 'Unknown Product' };
         const lastUpdated = new Date(item.lastUpdated).toLocaleString();
@@ -208,15 +278,6 @@ function renderInventoryTable(data) {
             statusClass = 'status-low-stock';
             statusText = 'Low Stock';
         }
-
-        // Add to search data
-        searchData.push({
-            id: productId,
-            name: product.name,
-            quantity: item.quantity,
-            status: item.quantity <= 0 ? 'out-of-stock' : (item.quantity <= LOW_STOCK_THRESHOLD ? 'low-stock' : 'in-stock'),
-            lastUpdated: lastUpdated
-        });
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -239,7 +300,7 @@ function renderInventoryTable(data) {
         inventoryList.appendChild(row);
     });
 
-    // Update search component with new data if it exists
+    // Update search component with all data (not just filtered)
     if (searchBar) {
         searchBar.setData(searchData);
     }
@@ -260,8 +321,8 @@ function renderInventoryTable(data) {
     });
 }
 
-// Render history table
-function renderHistoryTable(data) {
+// Render history table - Filtered for last 3 months
+function renderHistoryTable(data, threeMonthsAgoTimestamp) {
     // Clear loading message
     historyList.innerHTML = '';
 
@@ -274,23 +335,26 @@ function renderHistoryTable(data) {
         return;
     }
 
-    // Convert object to array and sort by timestamp (newest first)
-    const historyArray = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+    // Convert object to array
+    let historyArray = Object.values(data);
+
+    // Filter to include only entries from the last 3 months
+    historyArray = historyArray.filter(entry => entry.timestamp >= threeMonthsAgoTimestamp);
+
+    // Sort by timestamp (newest first)
+    historyArray.sort((a, b) => b.timestamp - a.timestamp);
 
     if (historyArray.length === 0) {
         historyList.innerHTML = `
             <tr>
-                <td colspan="4" class="no-data">No history data available</td>
+                <td colspan="4" class="no-data">No history data available for the last 3 months</td>
             </tr>
         `;
         return;
     }
 
-    // Take only the latest 20 entries
-    const recentHistory = historyArray.slice(0, 20);
-
     // Render each history entry
-    recentHistory.forEach(entry => {
+    historyArray.forEach(entry => {
         const product = allProducts.find(p => p.id === entry.productId) || { name: 'Unknown Product' };
         const dateTime = new Date(entry.timestamp).toLocaleString();
 
@@ -318,37 +382,63 @@ function renderHistoryTable(data) {
     });
 }
 
-// Setup event listeners
+// Set up event listeners for the page
 function setupEventListeners() {
+    // Inventory form submission
+    if (inventoryForm) {
+        inventoryForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await saveInventoryUpdate();
+        });
+    }
+
+    // Reset form button
+    if (resetFormBtn) {
+        resetFormBtn.addEventListener('click', resetForm);
+    }
+
     // Product selection change
-    productSelect.addEventListener('change', () => {
-        const productId = productSelect.value;
-        if (productId) {
-            updateCurrentStockDisplay(productId);
-        } else {
-            currentStockInput.value = '';
-        }
-    });
+    if (productSelect) {
+        productSelect.addEventListener('change', () => {
+            const selectedProductId = productSelect.value;
+            if (selectedProductId) {
+                updateCurrentStockDisplay(selectedProductId);
+            } else {
+                currentStockInput.value = '';
+            }
+        });
+    }
 
-    // Form submission
-    inventoryForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        saveInventoryUpdate();
-    });
+    // Modal close button
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
 
-    // Form reset
-    resetFormBtn.addEventListener('click', resetForm);
+    // Modal cancel button
+    const cancelModalBtn = document.getElementById('modal-cancel');
+    if (cancelModalBtn) {
+        cancelModalBtn.addEventListener('click', closeModal);
+    }
 
-    // Modal events
-    closeModalBtn.addEventListener('click', closeModal);
-    modalCancelBtn.addEventListener('click', closeModal);
+    // Quick filter buttons
+    const filterButtons = document.querySelectorAll('.filter-btn');
 
-    // Close modal on outside click
-    window.addEventListener('click', (e) => {
-        if (e.target === confirmModal) {
-            closeModal();
-        }
-    });
+    if (filterButtons.length > 0) {
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active button style
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Update current filter and re-render table
+                currentFilter = button.getAttribute('data-filter');
+                console.log(`Applied filter: ${currentFilter}`);
+
+                // Re-render inventory with the new filter
+                renderInventoryTable(currentInventoryData);
+            });
+        });
+    }
 }
 
 // Update current stock display
@@ -525,37 +615,46 @@ function showNotification(message, type = 'info') {
     alert(message);
 }
 
-// Initialize any inventory item that doesn't exist
+// Initialize inventory entries for all products
 async function initializeInventory() {
     try {
-        console.log('Initializing inventory for all products...');
-        // For each product, ensure an inventory entry exists
-        for (const product of allProducts) {
-            const inventoryRef = ref(rtdb, `inventory/${product.id}`);
-            const snapshot = await get(inventoryRef);
+        // Reference to the inventory path in Realtime Database
+        const inventoryRef = ref(rtdb, 'inventory');
 
-            // If no inventory entry exists, create one
-            if (!snapshot.exists()) {
-                console.log(`Creating initial inventory entry for ${product.name} (${product.id})`);
-                await set(inventoryRef, {
+        // Get current inventory data
+        const snapshot = await get(inventoryRef);
+        const existingInventory = snapshot.val() || {};
+
+        // Initialize inventory for products that don't have inventory records
+        for (const product of allProducts) {
+            if (!existingInventory[product.id]) {
+                console.log(`Initializing inventory for ${product.name}`);
+
+                // Create timestamp
+                const now = new Date().toISOString();
+
+                // Set inventory with default values
+                await set(child(inventoryRef, product.id), {
                     quantity: 0,
-                    lastUpdated: Date.now()
+                    lastUpdated: now
                 });
 
-                // Add to history
-                const historyRef = ref(rtdb, 'inventory_history');
-                await push(historyRef, {
+                // Add to history log
+                const historyRef = push(ref(rtdb, 'inventory_history'));
+                await set(historyRef, {
                     productId: product.id,
-                    operation: 'create',
                     quantity: 0,
+                    operation: 'create',
                     notes: 'Initial inventory entry',
                     timestamp: Date.now()
                 });
             }
         }
-        console.log('✅ Inventory initialization complete');
+
+        console.log('Inventory initialization complete');
     } catch (error) {
         console.error('Error initializing inventory:', error);
+        showNotification('Failed to initialize inventory', 'error');
     }
 }
 
@@ -563,56 +662,86 @@ async function initializeInventory() {
 window.editInventoryItem = editInventoryItem;
 window.confirmDeleteInventoryItem = confirmDeleteInventoryItem;
 
-// New function to initialize the search component
+// Initialize the search component
 function initSearchComponent() {
     try {
-        // Format data for search component
-        const searchData = [];
-
-        // Process inventory data for search
-        for (const [productId, item] of Object.entries(currentInventoryData)) {
-            const product = allProducts.find(p => p.id === productId) || { name: 'Unknown Product' };
-
-            searchData.push({
-                id: productId,
-                name: product.name,
-                quantity: item.quantity,
-                status: item.quantity <= 0 ? 'out-of-stock' : (item.quantity <= LOW_STOCK_THRESHOLD ? 'low-stock' : 'in-stock'),
-                lastUpdated: new Date(item.lastUpdated).toLocaleString()
-            });
+        // Check if the search container exists
+        const searchContainer = document.getElementById('inventory-search-container');
+        if (!searchContainer) {
+            console.warn('Search container not found in DOM');
+            return;
         }
 
-        // Initialize search component
+        // Create search bar instance
         searchBar = new SearchBar({
-            containerId: 'inventory-search-container',
-            data: searchData,
-            searchFields: ['name'],
-            placeholder: 'Search inventory...',
-            filterOptions: [
-                { label: 'All', value: 'all' },
-                { label: 'In Stock', value: 'in-stock' },
-                { label: 'Low Stock', value: 'low-stock' },
-                { label: 'Out of Stock', value: 'out-of-stock' }
+            container: searchContainer,
+            placeholder: 'Search products by name or status...',
+            options: [
+                { label: 'Product Name', value: 'name', active: true },
+                { label: 'Stock Status', value: 'status' }
             ],
-            debounceTime: 250, // Slightly faster response for inventory search
-            minChars: 2, // Start searching after 2 characters
-            onResultClick: (item) => {
-                // Highlight the row in the inventory table
-                const rows = document.querySelectorAll('tr');
-                for (const row of rows) {
-                    if (row.textContent.includes(item.name)) {
-                        row.scrollIntoView({ behavior: 'smooth' });
-                        row.classList.add('highlight-row');
-                        setTimeout(() => {
-                            row.classList.remove('highlight-row');
-                        }, 2000);
+            onSearch: function (query, filter, results) {
+                console.log(`Search: '${query}' in ${filter}, found ${results.length} results`);
 
-                        // Set the product in the form for editing
-                        productSelect.value = item.id;
-                        updateCurrentStockDisplay(item.id);
-                        break;
+                // If a result is clicked, highlight it in the table
+                return function (selectedItem) {
+                    if (selectedItem && selectedItem.id) {
+                        // If we have a filter active other than 'all', we need to temporarily
+                        // switch to 'all' to ensure the selected item is visible
+                        const needToResetFilter = currentFilter !== 'all';
+
+                        if (needToResetFilter) {
+                            // Set the filter to 'all' and update UI
+                            currentFilter = 'all';
+                            document.querySelectorAll('.filter-btn').forEach(btn => {
+                                btn.classList.remove('active');
+                                if (btn.getAttribute('data-filter') === 'all') {
+                                    btn.classList.add('active');
+                                }
+                            });
+
+                            // Re-render with all items
+                            renderInventoryTable(currentInventoryData);
+                        }
+
+                        // Find and highlight the row
+                        setTimeout(() => {
+                            const rows = document.querySelectorAll('#inventory-list tr');
+                            for (const row of rows) {
+                                const editBtn = row.querySelector('.edit-btn');
+                                if (editBtn && editBtn.getAttribute('data-id') === selectedItem.id) {
+                                    // Remove highlight from any previously highlighted row
+                                    document.querySelectorAll('.highlight-row').forEach(el => {
+                                        el.classList.remove('highlight-row');
+                                    });
+
+                                    // Add highlight to this row and scroll to it
+                                    row.classList.add('highlight-row');
+                                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    break;
+                                }
+                            }
+                        }, 100);
                     }
+                };
+            },
+            getItemHTML: function (item) {
+                // Return custom HTML for search result items
+                let statusLabel = '';
+
+                if (item.status === 'in-stock') {
+                    statusLabel = '<span class="in-stock">In Stock</span>';
+                } else if (item.status === 'low-stock') {
+                    statusLabel = '<span class="low-stock">Low Stock</span>';
+                } else if (item.status === 'out-of-stock') {
+                    statusLabel = '<span class="out-of-stock">Out of Stock</span>';
                 }
+
+                return `
+                    <h3>${item.name}</h3>
+                    <div class="price">Quantity: ${item.quantity}</div>
+                    <div class="result-status">${statusLabel}</div>
+                `;
             }
         });
 

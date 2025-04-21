@@ -99,6 +99,27 @@
             <!-- Replace the old search bar with our new search component -->
             <div id="inventory-search-container"></div>
 
+            <!-- Quick Filter Options -->
+            <div class="quick-filters">
+                <span class="filter-label">Quick Filters:</span>
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-border-all"></i> All Items
+                </button>
+                <button class="filter-btn" data-filter="in-stock">
+                    <i class="fas fa-check-circle"></i> In Stock
+                </button>
+                <button class="filter-btn" data-filter="low-stock">
+                    <i class="fas fa-exclamation-triangle"></i> Low Stock
+                </button>
+                <button class="filter-btn" data-filter="out-of-stock">
+                    <i class="fas fa-times-circle"></i> Out of Stock
+                </button>
+            </div>
+
+            <div class="scroll-indicator">
+                <i class="fas fa-arrow-down"></i> Scroll to see more items
+            </div>
+
             <div class="table-container">
                 <table id="inventory-table">
                     <thead>
@@ -123,11 +144,16 @@
         <!-- Inventory History Section -->
         <div class="inventory-history">
             <div class="section-header">
-                <h2><i class="fas fa-history"></i> Inventory History</h2>
+                <h2><i class="fas fa-history"></i> Inventory History (Last 3 Months)</h2>
                 <button class="download-btn" onclick="exportInventoryHistoryToExcel()">
                     <i class="fas fa-download"></i> Export History
                 </button>
             </div>
+
+            <div class="scroll-indicator">
+                <i class="fas fa-arrow-down"></i> Scroll to see more entries
+            </div>
+
             <div class="table-container">
                 <table id="history-table">
                     <thead>
@@ -139,7 +165,7 @@
                         </tr>
                     </thead>
                     <tbody id="history-list">
-                        <!-- Will be populated dynamically from Firebase -->
+                        <!-- Will be populated dynamically from Firebase with last 3 months data -->
                         <tr class="loading-row">
                             <td colspan="4">Loading history data...</td>
                         </tr>

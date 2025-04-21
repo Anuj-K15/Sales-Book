@@ -707,3 +707,97 @@ h1 {
   background-color: #4caf50;
   border: 1px solid #3d8b40;
 }
+
+/* Quick Filters for Products */
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  align-items: center;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto 15px auto;
+  box-sizing: border-box;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #495057;
+  margin-right: 5px;
+}
+
+.filter-btn {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: white;
+  color: #495057;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-btn i {
+  font-size: 0.9rem;
+}
+
+.filter-btn:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.filter-btn.active {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.filter-btn[data-filter="in-stock"] i {
+  color: #2e7d32;
+}
+
+.filter-btn[data-filter="low-stock"] i {
+  color: #ff8f00;
+}
+
+.filter-btn[data-filter="out-of-stock"] i {
+  color: #c62828;
+}
+
+.filter-btn.active i {
+  color: white;
+}
+
+/* Responsive adjustments for filters */
+@media (max-width: 768px) {
+  .quick-filters {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+  }
+
+  .filter-label {
+    margin-bottom: 8px;
+  }
+
+  .filter-btn {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 575px) {
+  .filter-btn {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+}

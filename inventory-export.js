@@ -38,7 +38,7 @@ function exportInventoryToExcel() {
     console.log('✅ Inventory overview exported successfully with adjusted column widths');
 }
 
-// Function to export inventory history to Excel
+// Function to export inventory history to Excel (last 3 months only)
 function exportInventoryHistoryToExcel() {
     // Get the table element
     const table = document.getElementById('history-table');
@@ -64,12 +64,16 @@ function exportInventoryHistoryToExcel() {
     ws['!cols'] = historyColumnWidths;
 
     // Add the worksheet to the workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Inventory History');
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventory History (3 Months)');
 
-    // Generate Excel file and trigger download
-    XLSX.writeFile(wb, 'inventory_history.xlsx');
+    // Get current date for filename
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
 
-    console.log('✅ Inventory history exported successfully with adjusted column widths');
+    // Generate Excel file and trigger download with date in filename
+    XLSX.writeFile(wb, `inventory_history_3_months_${dateStr}.xlsx`);
+
+    console.log('✅ Inventory history (last 3 months) exported successfully');
 }
 
 // Make the functions globally accessible

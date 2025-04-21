@@ -1,6 +1,11 @@
 // ✅ Define cart at the beginning to avoid "cart is not defined" error
 let cart = [];
 let orderCounter = 0;
+// Current filter for products
+let currentFilter = 'all';
+// Store product data for filtering
+let allProductsData = [];
+let productsInventory = {};
 
 // ✅ Import Firestore database
 import { db, rtdb } from "./firebase-config.js";
@@ -32,29 +37,56 @@ async function loadProducts() {
     try {
         beerList.innerHTML = "<div class='loading-message'>Loading products...</div>"; // ✅ Show loading message
 
-        const productsRef = collection(db, "products");
-        const snapshot = await getDocs(productsRef);
+        // Only fetch from Firestore if we don't have cached data
+        if (allProductsData.length === 0) {
+            const productsRef = collection(db, "products");
+            const snapshot = await getDocs(productsRef);
 
-        const products = [];
-        snapshot.forEach((doc) => {
-            products.push({ id: doc.id, ...doc.data() });
-        });
+            allProductsData = [];
+            snapshot.forEach((doc) => {
+                allProductsData.push({ id: doc.id, ...doc.data() });
+            });
 
-        // Fetch inventory data
-        const productIds = products.map(p => p.id);
-        const inventoryData = await getInventoryData(productIds);
+            // Fetch inventory data
+            const productIds = allProductsData.map(p => p.id);
+            productsInventory = await getInventoryData(productIds);
 
-        console.log(`✅ Fetched ${products.length} products and inventory data`);
+            console.log(`✅ Fetched ${allProductsData.length} products and inventory data`);
+        }
 
         // Use DocumentFragment for better performance
         const fragment = document.createDocumentFragment();
         beerList.innerHTML = ""; // ✅ Clear loading message
 
         // Sort products by name
+        const products = [...allProductsData];
         products.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
-        products.forEach(product => {
-            const inventory = inventoryData[product.id] || { quantity: 0 };
+        // Filter products based on current filter
+        const filteredProducts = products.filter(product => {
+            const inventory = productsInventory[product.id] || { quantity: 0 };
+            const isOutOfStock = inventory.quantity <= 0;
+            const isLowStock = inventory.quantity > 0 && inventory.quantity <= 5;
+
+            if (currentFilter === 'in-stock') {
+                return inventory.quantity > 5; // More than low stock threshold
+            } else if (currentFilter === 'low-stock') {
+                return isLowStock;
+            } else if (currentFilter === 'out-of-stock') {
+                return isOutOfStock;
+            }
+            return true; // 'all' filter
+        });
+
+        // Show message if no products match the filter
+        if (filteredProducts.length === 0) {
+            beerList.innerHTML = `<div class='loading-message'>No ${currentFilter.replace('-', ' ')} products found.</div>`;
+            return;
+        }
+
+        // Render filtered products
+        filteredProducts.forEach(product => {
+            const inventory = productsInventory[product.id] || { quantity: 0 };
             const isOutOfStock = inventory.quantity <= 0;
             const isLowStock = inventory.quantity > 0 && inventory.quantity <= 5;
 
@@ -142,7 +174,7 @@ async function loadProducts() {
         // Append all cards at once for better performance
         beerList.appendChild(fragment);
 
-        console.log(`✅ Loaded and displayed ${products.length} products`);
+        console.log(`✅ Displayed ${filteredProducts.length} products (filtered by: ${currentFilter})`);
 
     } catch (error) {
         console.error("❌ Error loading products:", error);
@@ -177,8 +209,32 @@ async function getInventoryData(productIds) {
     }
 }
 
+// Set up filter buttons
+function setupFilterButtons() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    if (filterButtons.length === 0) return;
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Update active button style
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            // Update current filter and re-render products
+            currentFilter = button.getAttribute('data-filter');
+            console.log(`Applied filter: ${currentFilter}`);
+
+            // Reload products with the new filter
+            loadProducts();
+        });
+    });
+}
+
 // ✅ Load Products on Page Load
-document.addEventListener("DOMContentLoaded", loadProducts);
+document.addEventListener("DOMContentLoaded", () => {
+    loadProducts();
+    setupFilterButtons();
+});
 
 // ✅ Function to add products to the cart
 window.addToCart = function (productId, name, price, buttonElement, scannedQuantity) {
