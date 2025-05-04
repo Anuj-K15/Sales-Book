@@ -3,7 +3,7 @@ import { db, rtdb } from './firebase-config.js';
 import { collection, getDocs, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { ref, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 import { getTodayIST } from './sales-page.js';
-import { exportSalesToExcel } from './excel-export.js';
+import { exportSalesToExcel, exportTotalsSalesReport } from './excel-export.js';
 
 // Global variables
 let currentPeriod = 'day';
@@ -58,11 +58,7 @@ function downloadSalesReport() {
         notification.className = 'notification success';
 
         // Custom message based on report type
-        let notificationMessage = 'Preparing report for download...';
-
-        if (currentPeriod === 'year') {
-            notificationMessage = 'Preparing yearly report organized by month...';
-        }
+        let notificationMessage = 'Preparing simplified sales report for download...';
 
         notification.textContent = notificationMessage;
         document.body.appendChild(notification);
@@ -73,13 +69,13 @@ function downloadSalesReport() {
 
         switch (currentPeriod) {
             case 'day':
-                // Export single day (today)
-                exportSalesToExcel(getTodayIST());
+                // Export single day (today) - simplified version
+                exportTotalsSalesReport(getTodayIST(), getTodayIST(), 'day');
                 break;
 
             case 'week':
-                // Export week with proper date formatting
-                exportDateRangeSales(
+                // Export week with proper date formatting - simplified version
+                exportTotalsSalesReport(
                     currentPeriodDateRange.startDate,
                     currentPeriodDateRange.endDate,
                     'week'
@@ -87,16 +83,17 @@ function downloadSalesReport() {
                 break;
 
             case 'month':
-                // Export month (using YYYY-MM format for current month)
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                exportSalesToExcel(null, `${year}-${month}`);
+                // Export month - simplified version
+                exportTotalsSalesReport(
+                    currentPeriodDateRange.startDate,
+                    currentPeriodDateRange.endDate,
+                    'month'
+                );
                 break;
 
             case 'year':
-                // Export year with proper date formatting
-                exportDateRangeSales(
+                // Export year with proper date formatting - simplified version
+                exportTotalsSalesReport(
                     currentPeriodDateRange.startDate,
                     currentPeriodDateRange.endDate,
                     'year'
@@ -322,13 +319,26 @@ async function exportDateRangeSales(startDate, endDate, periodType) {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Sales Data");
 
+        // Get current timestamp for filename
+        const now = new Date();
+        const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+
         // Generate Excel file and trigger download
-        let filename = "beerzone-sales";
+        let filename = `BeerZone_Sales_Custom_${formatFilenameDate(startDate)}_to_${formatFilenameDate(endDate)}_${timeStr}`;
+
         if (periodType === 'week') {
-            filename = `beerzone-sales-week-${formatFilenameDate(startDate)}-to-${formatFilenameDate(endDate)}`;
+            filename = `BeerZone_Sales_Weekly_${formatFilenameDate(startDate)}_to_${formatFilenameDate(endDate)}_${timeStr}`;
         } else if (periodType === 'year') {
             const year = new Date(startDate).getFullYear();
-            filename = `beerzone-sales-year-${year}`;
+            filename = `BeerZone_Sales_Annual_${year}_${timeStr}`;
+        } else if (periodType === 'month') {
+            const [year, month] = startDate.split('-');
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ];
+            const monthName = monthNames[parseInt(month) - 1];
+            filename = `BeerZone_Sales_Monthly_${monthName}_${year}_${timeStr}`;
         }
 
         XLSX.writeFile(wb, `${filename}.xlsx`);

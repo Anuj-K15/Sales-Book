@@ -79,12 +79,12 @@
                 <strong>Total: ₹<span id="total-price">0</span></strong>
             </div>
             <div class="payment-method">
-                <label for="payment">Payment Method: </label>
-                <select id="payment">
-                    <option value="UPI">UPI</option>
-                    <option value="CASH">Cash</option>
-                    <option value="CARD">Card</option>
-                </select>
+                <label>Payment Method: </label>
+                <div class="payment-buttons">
+                    <button type="button" class="payment-btn active" data-payment="UPI">UPI</button>
+                    <button type="button" class="payment-btn" data-payment="CASH">Cash</button>
+                </div>
+                <input type="hidden" id="payment" value="UPI">
             </div>
             <button class="record-btn" onclick="recordSale()">Record Sale</button>
         </div>
@@ -127,6 +127,24 @@
                 // Expose testing function globally
                 window.testBarcodeSearch = testBarcodeSearch;
                 console.log("✅ Test function available: Call testBarcodeSearch('your-barcode') in console to test");
+
+                // Set up payment method buttons
+                const paymentButtons = document.querySelectorAll('.payment-btn');
+                const paymentInput = document.getElementById('payment');
+
+                paymentButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        // Remove active class from all buttons
+                        paymentButtons.forEach(btn => btn.classList.remove('active'));
+
+                        // Add active class to clicked button
+                        button.classList.add('active');
+
+                        // Update hidden input value
+                        paymentInput.value = button.getAttribute('data-payment');
+                        console.log(`Payment method changed to ${paymentInput.value}`);
+                    });
+                });
 
                 // Fetch products from Firestore
                 const productsRef = collection(db, "products");

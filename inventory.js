@@ -42,7 +42,6 @@ const editIdInput = document.getElementById('edit-id');
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded, initializing inventory system...');
     initInventorySystem();
-    setupEventListeners();
 });
 
 // Initialize the inventory system
@@ -177,7 +176,7 @@ function renderInventoryTable(data) {
     if (!data || Object.keys(data).length === 0) {
         inventoryList.innerHTML = `
             <tr>
-                <td colspan="5" class="no-data">No inventory data available</td>
+                <td colspan="6" class="no-data">No inventory data available</td>
             </tr>
         `;
 
@@ -189,8 +188,24 @@ function renderInventoryTable(data) {
         return;
     }
 
+    // Get inventory history data for each product
+    get(ref(rtdb, 'inventory_history')).then(historySnapshot => {
+        const historyData = historySnapshot.val() || {};
+
+        // Process and render inventory items with history data
+        renderInventoryWithHistory(data, historyData);
+    }).catch(error => {
+        console.error('Error getting inventory history:', error);
+
+        // If we can't get history data, render without it
+        renderInventoryWithHistory(data, {});
+    });
+}
+
+// Helper function to render inventory with history data
+function renderInventoryWithHistory(inventoryData, historyData) {
     // Convert to array of entries
-    let filteredItems = Object.entries(data);
+    let filteredItems = Object.entries(inventoryData);
 
     // Prepare search data
     const searchData = [];
@@ -250,7 +265,7 @@ function renderInventoryTable(data) {
     if (filteredItems.length === 0) {
         inventoryList.innerHTML = `
             <tr>
-                <td colspan="5" class="no-data">No ${currentFilter.replace('-', ' ')} items found</td>
+                <td colspan="6" class="no-data">No ${currentFilter.replace('-', ' ')} items found</td>
             </tr>
         `;
 
@@ -279,10 +294,38 @@ function renderInventoryTable(data) {
             statusText = 'Low Stock';
         }
 
+        // Find the last operation for this product
+        let lastOperation = { operation: 'None', quantity: 0, timestamp: 0 };
+
+        // Convert history data to array and filter for this product
+        const productHistory = Object.values(historyData)
+            .filter(entry => entry.productId === productId)
+            .sort((a, b) => b.timestamp - a.timestamp);
+
+        if (productHistory.length > 0) {
+            lastOperation = productHistory[0]; // Most recent history entry
+        }
+
+        // Format the last operation text
+        let operationText = '-';
+        if (lastOperation.operation) {
+            const opDate = new Date(lastOperation.timestamp).toLocaleDateString();
+            if (lastOperation.operation === 'add') {
+                operationText = `<span style="color: green">Added ${lastOperation.quantity} on ${opDate}</span>`;
+            } else if (lastOperation.operation === 'remove') {
+                operationText = `<span style="color: red">Removed ${lastOperation.quantity} on ${opDate}</span>`;
+            } else if (lastOperation.operation === 'delete') {
+                operationText = `<span style="color: red">Deleted on ${opDate}</span>`;
+            } else if (lastOperation.operation === 'create') {
+                operationText = `<span style="color: blue">Created on ${opDate}</span>`;
+            }
+        }
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${product.name}</td>
             <td>${item.quantity}</td>
+            <td>${operationText}</td>
             <td>${lastUpdated}</td>
             <td><span class="status ${statusClass}">${statusText}</span></td>
             <td>

@@ -3,7 +3,7 @@
  * Uses SheetJS library to export inventory data to Excel
  */
 
-// Function to export inventory overview to Excel
+// Function to export inventory to Excel
 function exportInventoryToExcel() {
     // Get the table element
     const table = document.getElementById('inventory-table');
@@ -20,22 +20,28 @@ function exportInventoryToExcel() {
     const ws = XLSX.utils.table_to_sheet(table);
 
     // Set column widths for better readability
-    const inventoryColumnWidths = [
-        { wch: 30 },  // Product (column A)
+    const columnWidths = [
+        { wch: 30 },  // Product Name (column A)
         { wch: 15 },  // Current Stock (column B)
-        { wch: 20 },  // Last Updated (column C)
-        { wch: 15 },  // Status (column D)
-        { wch: 15 }   // Actions (column E)
+        { wch: 30 },  // Previous Operation (column C)
+        { wch: 25 },  // Last Updated (column D)
+        { wch: 15 },  // Status (column E)
+        { wch: 25 }   // Actions (column F) - might be hidden in Excel
     ];
-    ws['!cols'] = inventoryColumnWidths;
+    ws['!cols'] = columnWidths;
 
     // Add the worksheet to the workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Inventory Overview');
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
 
-    // Generate Excel file and trigger download
-    XLSX.writeFile(wb, 'inventory_overview.xlsx');
+    // Get current date for filename
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
 
-    console.log('✅ Inventory overview exported successfully with adjusted column widths');
+    // Generate Excel file and trigger download with date in filename
+    XLSX.writeFile(wb, `BeerZone_Inventory_${dateStr}_${timeStr}.xlsx`);
+
+    console.log('✅ Inventory exported successfully');
 }
 
 // Function to export inventory history to Excel (last 3 months only)
@@ -69,9 +75,15 @@ function exportInventoryHistoryToExcel() {
     // Get current date for filename
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+
+    // Format the date range for the filename (3 months ago to today)
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    const fromDate = `${threeMonthsAgo.getFullYear()}-${(threeMonthsAgo.getMonth() + 1).toString().padStart(2, '0')}-${threeMonthsAgo.getDate().toString().padStart(2, '0')}`;
 
     // Generate Excel file and trigger download with date in filename
-    XLSX.writeFile(wb, `inventory_history_3_months_${dateStr}.xlsx`);
+    XLSX.writeFile(wb, `BeerZone_Inventory_History_${fromDate}_to_${dateStr}_${timeStr}.xlsx`);
 
     console.log('✅ Inventory history (last 3 months) exported successfully');
 }

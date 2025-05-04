@@ -41,44 +41,10 @@ function initReports() {
 
 // Initialize date pickers
 function initDatePickers() {
-    // Daily date picker (specific date)
-    flatpickr(dailyDatePicker, {
-        dateFormat: "Y-m-d",
-        maxDate: "today",
-        defaultDate: "today",
-        onChange: function (selectedDates, dateStr) {
-            // User selected a specific date
-            console.log("Selected date:", dateStr);
-        }
-    });
-
-    // Monthly date picker (month and year)
-    flatpickr(monthlyDatePicker, {
-        plugins: [
-            new monthSelectPlugin({
-                shorthand: true,
-                dateFormat: "Y-m",
-                altFormat: "F Y"
-            })
-        ],
-        onChange: function (selectedDates, dateStr) {
-            console.log("Selected month:", dateStr);
-        }
-    });
-
-    // Yearly date picker (year only)
-    flatpickr(yearlyDatePicker, {
-        plugins: [
-            new monthSelectPlugin({
-                shorthand: true,
-                dateFormat: "Y",
-                altFormat: "Y"
-            })
-        ],
-        onChange: function (selectedDates, dateStr) {
-            console.log("Selected year:", dateStr);
-        }
-    });
+    // Initialize all date pickers with their specific formats
+    initializeDailyDatePicker();
+    initializeMonthlyDatePicker();
+    initializeYearlyDatePicker();
 
     // Handle button clicks
     document.getElementById('daily-date-search').addEventListener('click', () => {
@@ -106,6 +72,83 @@ function initDatePickers() {
     document.getElementById('export-daily-all').addEventListener('click', exportAllDailyReports);
     document.getElementById('export-monthly-all').addEventListener('click', exportAllMonthlyReports);
     document.getElementById('export-yearly-all').addEventListener('click', exportAllYearlyReports);
+}
+
+// Initialize daily date picker
+function initializeDailyDatePicker() {
+    // Destroy previous instance if exists
+    if (dailyDatePicker._flatpickr) {
+        dailyDatePicker._flatpickr.destroy();
+    }
+
+    // Daily date picker (specific date)
+    flatpickr(dailyDatePicker, {
+        dateFormat: "Y-m-d",
+        maxDate: "today",
+        defaultDate: "today",
+        disableMobile: "true", // Ensure desktop experience on mobile
+        static: true,
+        theme: "light",
+        showMonths: 1,
+        onChange: function (selectedDates, dateStr) {
+            console.log("Selected date:", dateStr);
+        }
+    });
+}
+
+// Initialize monthly date picker
+function initializeMonthlyDatePicker() {
+    // Destroy previous instance if exists
+    if (monthlyDatePicker._flatpickr) {
+        monthlyDatePicker._flatpickr.destroy();
+    }
+
+    // Monthly date picker (month and year only, no days)
+    flatpickr(monthlyDatePicker, {
+        plugins: [
+            new monthSelectPlugin({
+                shorthand: true,
+                dateFormat: "Y-m",
+                altFormat: "F Y",
+                theme: "light"
+            })
+        ],
+        disableMobile: "true", // Ensure desktop experience on mobile
+        static: true,
+        onChange: function (selectedDates, dateStr) {
+            console.log("Selected month:", dateStr);
+        }
+    });
+}
+
+// Initialize yearly date picker
+function initializeYearlyDatePicker() {
+    // Destroy previous instance if exists
+    if (yearlyDatePicker._flatpickr) {
+        yearlyDatePicker._flatpickr.destroy();
+    }
+
+    // Yearly date picker (year only)
+    flatpickr(yearlyDatePicker, {
+        plugins: [
+            new monthSelectPlugin({
+                shorthand: true,
+                dateFormat: "Y",
+                altFormat: "Y",
+                theme: "light",
+                monthsPerRow: 4
+            })
+        ],
+        disableMobile: "true", // Ensure desktop experience on mobile
+        static: true,
+        // Override how dates are shown to display years only
+        formatDate: function (date, format) {
+            return date.getFullYear().toString();
+        },
+        onChange: function (selectedDates, dateStr) {
+            console.log("Selected year:", dateStr);
+        }
+    });
 }
 
 // Setup time period buttons
@@ -141,13 +184,39 @@ function setupTimeButtons() {
             });
             targetSection.classList.add('active');
 
-            // Load data if necessary
+            // Reinitialize the appropriate date picker based on the selected section and open it
             if (targetId === 'daily-report') {
+                initializeDailyDatePicker();
                 loadDailyReports();
+
+                // Give the datepicker time to initialize before opening
+                setTimeout(() => {
+                    if (dailyDatePicker._flatpickr) {
+                        dailyDatePicker._flatpickr.open();
+                    }
+                }, 200);
+
             } else if (targetId === 'monthly-report') {
+                initializeMonthlyDatePicker();
                 loadMonthlyReports();
+
+                // Give the datepicker time to initialize before opening
+                setTimeout(() => {
+                    if (monthlyDatePicker._flatpickr) {
+                        monthlyDatePicker._flatpickr.open();
+                    }
+                }, 200);
+
             } else if (targetId === 'yearly-report') {
+                initializeYearlyDatePicker();
                 loadYearlyReports();
+
+                // Give the datepicker time to initialize before opening
+                setTimeout(() => {
+                    if (yearlyDatePicker._flatpickr) {
+                        yearlyDatePicker._flatpickr.open();
+                    }
+                }, 200);
             }
         });
     });
@@ -742,22 +811,208 @@ function displayYearlyReports(salesByYear) {
 }
 
 // Functions to filter monthly and yearly reports
-function loadMonthlyReportsByMonth(monthYear) {
+async function loadMonthlyReportsByMonth(monthYear) {
     console.log(`Loading reports for month: ${monthYear}`);
-    // Logic similar to loadDailyReportsByDate but for months
+
+    if (!monthlyReportContainer) {
+        console.error("Monthly report container not found");
+        return;
+    }
+
+    try {
+        // Show loading state
+        monthlyReportContainer.innerHTML = `
+            <div class="loading-message">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Loading monthly report for ${formatMonthForDisplay(monthYear)}...</span>
+            </div>
+        `;
+
+        // Extract year and month
+        const [year, month] = monthYear.split('-');
+
+        // Calculate start and end dates for the month
+        const startDate = `${monthYear}-01`;
+
+        // Last day of month: Create a date for the first day of the next month, then subtract one day
+        const lastDay = new Date(year, month, 0).getDate();
+        const endDate = `${monthYear}-${lastDay}`;
+
+        // Query Firestore for sales in this month
+        const salesRef = collection(db, "sales");
+        const salesQuery = query(
+            salesRef,
+            where("date", ">=", startDate),
+            where("date", "<=", endDate),
+            orderBy("date", "desc")
+        );
+
+        const snapshot = await getDocs(salesQuery);
+
+        if (snapshot.empty) {
+            monthlyReportContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-chart-area"></i>
+                    <p>No sales data available for ${formatMonthForDisplay(monthYear)}</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Group sales by month
+        const salesByMonth = {};
+        salesByMonth[monthYear] = {
+            totalAmount: 0,
+            orderCount: 0,
+            averageOrder: 0,
+            items: {},
+            days: new Set()
+        };
+
+        snapshot.forEach(doc => {
+            const sale = doc.data();
+            const monthData = salesByMonth[monthYear];
+
+            // Extract day from the date to count unique days
+            const day = sale.date.split('-')[2];
+            monthData.days.add(day);
+
+            // Update totals
+            monthData.totalAmount += sale.totalAmount;
+            monthData.orderCount++;
+
+            // Update items sold
+            sale.items.forEach(item => {
+                if (!monthData.items[item.name]) {
+                    monthData.items[item.name] = {
+                        quantity: 0,
+                        total: 0
+                    };
+                }
+
+                monthData.items[item.name].quantity += item.quantity;
+                monthData.items[item.name].total += item.price * item.quantity;
+            });
+        });
+
+        // Calculate average order value
+        salesByMonth[monthYear].averageOrder = salesByMonth[monthYear].totalAmount / salesByMonth[monthYear].orderCount;
+
+        // Display the filtered report
+        displayMonthlyReports(salesByMonth);
+
+    } catch (error) {
+        console.error("Error loading monthly report:", error);
+        monthlyReportContainer.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Failed to load monthly report: ${error.message}</p>
+            </div>
+        `;
+    }
 }
 
-function loadYearlyReportsByYear(year) {
+async function loadYearlyReportsByYear(year) {
     console.log(`Loading reports for year: ${year}`);
-    // Logic similar to loadDailyReportsByDate but for years
+
+    if (!yearlyReportContainer) {
+        console.error("Yearly report container not found");
+        return;
+    }
+
+    try {
+        // Show loading state
+        yearlyReportContainer.innerHTML = `
+            <div class="loading-message">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Loading yearly report for ${year}...</span>
+            </div>
+        `;
+
+        // Start and end dates for the year
+        const startDate = `${year}-01-01`;
+        const endDate = `${year}-12-31`;
+
+        // Query Firestore for sales in this year
+        const salesRef = collection(db, "sales");
+        const salesQuery = query(
+            salesRef,
+            where("date", ">=", startDate),
+            where("date", "<=", endDate),
+            orderBy("date", "desc")
+        );
+
+        const snapshot = await getDocs(salesQuery);
+
+        if (snapshot.empty) {
+            yearlyReportContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-chart-area"></i>
+                    <p>No sales data available for ${year}</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Group sales by year
+        const salesByYear = {};
+        salesByYear[year] = {
+            totalAmount: 0,
+            orderCount: 0,
+            averageOrder: 0,
+            items: {},
+            months: new Set()
+        };
+
+        snapshot.forEach(doc => {
+            const sale = doc.data();
+            const yearData = salesByYear[year];
+
+            // Extract month from the date to count unique months
+            const month = sale.date.split('-')[1];
+            yearData.months.add(month);
+
+            // Update totals
+            yearData.totalAmount += sale.totalAmount;
+            yearData.orderCount++;
+
+            // Update items sold
+            sale.items.forEach(item => {
+                if (!yearData.items[item.name]) {
+                    yearData.items[item.name] = {
+                        quantity: 0,
+                        total: 0
+                    };
+                }
+
+                yearData.items[item.name].quantity += item.quantity;
+                yearData.items[item.name].total += item.price * item.quantity;
+            });
+        });
+
+        // Calculate average order value
+        salesByYear[year].averageOrder = salesByYear[year].totalAmount / salesByYear[year].orderCount;
+
+        // Display the filtered report
+        displayYearlyReports(salesByYear);
+
+    } catch (error) {
+        console.error("Error loading yearly report:", error);
+        yearlyReportContainer.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Failed to load yearly report: ${error.message}</p>
+            </div>
+        `;
+    }
 }
 
 // Export functions
 function exportDailyReport(dateKey) {
     console.log(`Exporting daily report for ${dateKey}`);
-    // Use the excel-export.js functionality
-    if (window.exportSalesToExcel) {
-        window.exportSalesToExcel(dateKey);
+    // Use the simplified export functionality without product details
+    if (window.exportTotalsSalesReport) {
+        window.exportTotalsSalesReport(dateKey, dateKey, 'day');
     } else {
         alert("Export functionality not available");
     }
@@ -765,7 +1020,7 @@ function exportDailyReport(dateKey) {
 
 function exportMonthlyReport(monthKey) {
     console.log(`Exporting monthly report for ${monthKey}`);
-    if (window.exportSalesToExcel) {
+    if (window.exportTotalsSalesReport) {
         // Extract year and month
         const [year, month] = monthKey.split('-');
 
@@ -776,8 +1031,8 @@ function exportMonthlyReport(monthKey) {
         const lastDay = new Date(year, month, 0).getDate();
         const endDate = `${monthKey}-${lastDay}`;
 
-        // Call export function with date range
-        window.exportDateRangeSales(startDate, endDate, 'month');
+        // Call simplified export function with date range
+        window.exportTotalsSalesReport(startDate, endDate, 'month');
     } else {
         alert("Export functionality not available");
     }
@@ -785,10 +1040,10 @@ function exportMonthlyReport(monthKey) {
 
 function exportYearlyReport(yearKey) {
     console.log(`Exporting yearly report for ${yearKey}`);
-    if (window.exportSalesToExcel) {
+    if (window.exportTotalsSalesReport) {
         const startDate = `${yearKey}-01-01`;
         const endDate = `${yearKey}-12-31`;
-        window.exportDateRangeSales(startDate, endDate, 'year');
+        window.exportTotalsSalesReport(startDate, endDate, 'year');
     } else {
         alert("Export functionality not available");
     }
@@ -796,30 +1051,65 @@ function exportYearlyReport(yearKey) {
 
 // Export all reports
 function exportAllDailyReports() {
-    console.log("Exporting all daily reports");
-    if (window.exportSalesToExcel) {
-        window.exportSalesToExcel();
+    console.log("Exporting all daily reports (Last 30 days)");
+    if (window.exportTotalsSalesReport) {
+        // Calculate dates for last 30 days
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        const startDate = formatDateYYYYMMDD(thirtyDaysAgo);
+        const endDate = formatDateYYYYMMDD(today);
+
+        // Export last 30 days as a summary
+        window.exportTotalsSalesReport(startDate, endDate, 'last-30-days');
     } else {
         alert("Export functionality not available");
     }
 }
 
 function exportAllMonthlyReports() {
-    console.log("Exporting all monthly reports");
-    if (window.exportSalesToExcel) {
-        window.exportSalesToExcel();
+    console.log("Exporting all monthly reports (Last 12 months)");
+    if (window.exportTotalsSalesReport) {
+        // Calculate dates for last 12 months
+        const today = new Date();
+        const twelveMonthsAgo = new Date(today);
+        twelveMonthsAgo.setMonth(today.getMonth() - 12);
+
+        const startDate = formatDateYYYYMMDD(twelveMonthsAgo);
+        const endDate = formatDateYYYYMMDD(today);
+
+        // Export last 12 months as a summary
+        window.exportTotalsSalesReport(startDate, endDate, 'last-12-months');
     } else {
         alert("Export functionality not available");
     }
 }
 
 function exportAllYearlyReports() {
-    console.log("Exporting all yearly reports");
-    if (window.exportSalesToExcel) {
-        window.exportSalesToExcel();
+    console.log("Exporting all yearly reports (Last 5 years)");
+    if (window.exportTotalsSalesReport) {
+        // Calculate dates for last 5 years
+        const today = new Date();
+        const fiveYearsAgo = new Date(today);
+        fiveYearsAgo.setFullYear(today.getFullYear() - 5);
+
+        const startDate = formatDateYYYYMMDD(fiveYearsAgo);
+        const endDate = formatDateYYYYMMDD(today);
+
+        // Export last 5 years as a summary
+        window.exportTotalsSalesReport(startDate, endDate, 'last-5-years');
     } else {
         alert("Export functionality not available");
     }
+}
+
+// Helper function to format date as YYYY-MM-DD
+function formatDateYYYYMMDD(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 // View details functions
