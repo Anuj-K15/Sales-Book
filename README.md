@@ -30,7 +30,8 @@ Visit the live website: [https://beerzone.netlify.app/](https://beerzone.netlify
 
 2. Navigate into the project directory:
 
-cd beerzone
+   ```bash
+   cd beerzone
 
 
 3. Set up Firebase in your project and add your configuration to the Firebase initialization script.
